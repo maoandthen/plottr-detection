@@ -37,6 +37,8 @@ def normalise_name(name: str) -> str:
     if not name:
         return ""
     name = unicodedata.normalize("NFKD", name)
+    # Normalise Unicode hyphen variants (\u2010, \u2011, \u2012, \u2013, en/em dash) to ASCII hyphen
+    name = re.sub(r"[\u2010\u2011\u2012\u2013\u2014\u2015\ufe58\ufe63\uff0d]", "-", name)
     name = name.lower().strip()
     name = re.sub(r"[^a-z0-9\s\-]", "", name)
     name = re.sub(r"\s+", " ", name)
