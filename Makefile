@@ -1,4 +1,4 @@
-.PHONY: up down test verify-m0 verify-m1 download-bulk stage-init stage-load
+.PHONY: up down test verify-m0 verify-m1 download-bulk stage-init stage-load build-graph
 
 up:
 	docker compose up -d --wait
@@ -25,6 +25,9 @@ stage-init:
 
 stage-load:
 	@PYTHONPATH=. python3 etl/stage_load.py
+
+build-graph:
+	@PYTHONPATH=. python3 etl/build_graph.py
 
 verify-m1:
 	@echo "--- M1 verification ---"
