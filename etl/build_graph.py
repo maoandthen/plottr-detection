@@ -44,12 +44,14 @@ def get_database_url() -> str:
 
 def get_neo4j_config() -> tuple[str, str, str]:
     """Read Neo4j connection details from .env."""
-    uri = os.getenv("NEO4J_URI", "neo4j://localhost:7687")
+    uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
     user = os.getenv("NEO4J_USER", "neo4j")  
     password = os.getenv("NEO4J_PASSWORD", "password")
     
-    # Translate neo4j hostname to localhost 
-    uri = uri.replace("neo4j://neo4j:", "neo4j://localhost:")
+    # Translate internal Docker hostname to localhost and ensure bolt scheme
+    uri = uri.replace("://neo4j:", "://localhost:")
+    if uri.startswith("neo4j://"):
+        uri = uri.replace("neo4j://", "bolt://")
     
     return uri, user, password
 
@@ -102,26 +104,30 @@ def phase_3b_company_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor('company_cursor') as cursor:
+    with pg_conn.cursor(name='company_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
             for batch in batched(cursor, 5000):
-                rows = [dict(zip(['company_number', 'company_name', 'company_status', 
+                rows = []
+                for row in batch:
+                    d = dict(zip(['company_number', 'company_name', 'company_status', 
                                 'incorporation_date', 'dissolution_date', 'company_category', 
-                                'sic_code_sic_text_1'], row)) for row in batch]
+                                'sic_code_sic_text_1'], row))
+                    d['name_normalised'] = normalise_name(d['company_name'] or '')
+                    rows.append(d)
                 
                 session.run("""
                 UNWIND $rows AS row
                 MERGE (c:Company {company_number: row.company_number})
                 SET c.name = row.company_name,
-                    c.name_normalised = $normalise_name(row.company_name),
+                    c.name_normalised = row.name_normalised,
                     c.status = row.company_status,
                     c.incorporation_date = row.incorporation_date,
                     c.dissolution_date = row.dissolution_date,
                     c.category = row.company_category,
                     c.sic_text = row.sic_code_sic_text_1
-                """, rows=rows, normalise_name=normalise_name)
+                """, rows=rows)
                 
                 total_processed += len(batch)
                 if total_processed % 100000 == 0:
@@ -149,14 +155,17 @@ def phase_3c_title_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor('title_cursor') as cursor:
+    with pg_conn.cursor(name='title_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
             for batch in batched(cursor, 5000):
-                rows = [dict(zip(['title_number', 'tenure', 'property_address', 
-                                'district', 'county', 'region', 'postcode', 'source'], row)) 
-                       for row in batch]
+                rows = []
+                for row in batch:
+                    d = dict(zip(['title_number', 'tenure', 'property_address', 
+                                'district', 'county', 'region', 'postcode', 'source'], row))
+                    d['postcode'] = normalise_postcode(d['postcode'] or '')
+                    rows.append(d)
                 
                 session.run("""
                 UNWIND $rows AS row
@@ -166,9 +175,9 @@ def phase_3c_title_nodes(pg_conn, neo4j_driver):
                     t.district = row.district,
                     t.county = row.county,
                     t.region = row.region,
-                    t.postcode = $normalise_postcode(row.postcode),
+                    t.postcode = row.postcode,
                     t.source = row.source
-                """, rows=rows, normalise_postcode=normalise_postcode)
+                """, rows=rows)
                 
                 total_processed += len(batch)
                 if total_processed % 100000 == 0:
@@ -220,7 +229,7 @@ def phase_3d_owned_by_edges(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor('owned_by_cursor') as cursor:
+    with pg_conn.cursor(name='owned_by_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
@@ -257,7 +266,7 @@ def phase_3e_person_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor('person_cursor') as cursor:
+    with pg_conn.cursor(name='person_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
@@ -279,7 +288,15 @@ def phase_3e_person_nodes(pg_conn, neo4j_driver):
                     dob = psc_data.get('date_of_birth', {})
                     dob_year = dob.get('year', '')
                     dob_month = dob.get('month', '')
-                    dob_year_month = f"{dob_year}-{dob_month:02d}" if dob_year and dob_month else ""
+                    try:
+                        dob_year_int = int(dob_year) if dob_year else None
+                        dob_month_int = int(dob_month) if dob_month else None
+                        if dob_year_int and dob_month_int:
+                            dob_year_month = f"{dob_year_int}-{dob_month_int:02d}"
+                        else:
+                            dob_year_month = ""
+                    except (ValueError, TypeError):
+                        dob_year_month = ""
                     
                     # Extract other fields
                     country_of_residence = psc_data.get('country_of_residence', '')
@@ -330,7 +347,7 @@ def phase_3f_psc_of_edges(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor('psc_edge_cursor') as cursor:
+    with pg_conn.cursor(name='psc_edge_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
@@ -351,7 +368,15 @@ def phase_3f_psc_of_edges(pg_conn, neo4j_driver):
                     dob = psc_data.get('date_of_birth', {})
                     dob_year = dob.get('year', '')
                     dob_month = dob.get('month', '')
-                    dob_year_month = f"{dob_year}-{dob_month:02d}" if dob_year and dob_month else ""
+                    try:
+                        dob_year_int = int(dob_year) if dob_year else None
+                        dob_month_int = int(dob_month) if dob_month else None
+                        if dob_year_int and dob_month_int:
+                            dob_year_month = f"{dob_year_int}-{dob_month_int:02d}"
+                        else:
+                            dob_year_month = ""
+                    except (ValueError, TypeError):
+                        dob_year_month = ""
                     
                     country_of_residence = psc_data.get('country_of_residence', '')
                     pid = person_id(name, dob_year_month, country_of_residence)
@@ -404,7 +429,7 @@ def phase_3g_address_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor('address_cursor') as cursor:
+    with pg_conn.cursor(name='address_cursor') as cursor:
         cursor.execute(company_query)
         
         with neo4j_driver.session() as session:
