@@ -46,7 +46,7 @@ def get_neo4j_config() -> tuple[str, str, str]:
     """Read Neo4j connection details from .env."""
     uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
     user = os.getenv("NEO4J_USER", "neo4j")  
-    password = os.getenv("NEO4J_PASSWORD", "password")
+    password = os.getenv("NEO4J_PASSWORD", "plottr_secret")
     
     # Translate internal Docker hostname to localhost and ensure bolt scheme
     uri = uri.replace("://neo4j:", "://localhost:")
