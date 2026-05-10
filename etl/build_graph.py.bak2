@@ -56,40 +56,39 @@ def get_neo4j_config() -> tuple[str, str, str]:
     return uri, user, password
 
 
-def fetch_batches(cursor, batch_size: int = 5000):
-    """Yield batches of rows from a cursor using fetchmany."""
-    while True:
-        rows = cursor.fetchmany(batch_size)
-        if not rows:
-            break
-        yield rows
+def batched(iterator: Iterator, batch_size: int = 5000) -> Iterator[list]:
+    """Yield successive batches from iterator."""
+    batch = []
+    for item in iterator:
+        batch.append(item)
+        if len(batch) == batch_size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
 
 
 def phase_3a_schema_setup(neo4j_driver):
     """Phase 3a: Create Neo4j constraints and indexes."""
-    print(f"[{time.strftime('%H:%M:%S')}] === PHASE 3a: Schema Setup ===", flush=True)
+    print("=== PHASE 3a: Schema Setup ===")
     start_time = time.time()
     
     schema_path = Path(__file__).parent / "sql" / "graph_schema.cypher"
-    print(f"[{time.strftime('%H:%M:%S')}] Reading schema from {schema_path}", flush=True)
     cypher_commands = schema_path.read_text().strip()
     
-    print(f"[{time.strftime('%H:%M:%S')}] Opening Neo4j session...", flush=True)
     with neo4j_driver.session() as session:
-        print(f"[{time.strftime('%H:%M:%S')}] Session open. Splitting commands...", flush=True)
         # Split by semicolon and execute each command
-        for i, command in enumerate(cypher_commands.split(';')):
+        for command in cypher_commands.split(';'):
             command = command.strip()
             if command and not command.startswith('//'):
-                print(f"[{time.strftime('%H:%M:%S')}] Running command {i}: {command[:80]}...", flush=True)
                 try:
                     session.run(command)
-                    print(f"[{time.strftime('%H:%M:%S')}] ✓ Command {i} succeeded", flush=True)
+                    print(f"  ✓ {command.split()[0]} {command.split()[1]}")
                 except Exception as e:
-                    print(f"[{time.strftime('%H:%M:%S')}] ✗ Command {i} failed: {e}", flush=True)
+                    print(f"  ! {command.split()[0]} {command.split()[1]}: {e}")
     
     elapsed = time.time() - start_time
-    print(f"[{time.strftime('%H:%M:%S')}] Schema setup complete in {elapsed:.1f}s", flush=True)
+    print(f"  Schema setup complete in {elapsed:.1f}s")
 
 
 def phase_3b_company_nodes(pg_conn, neo4j_driver):
@@ -105,16 +104,11 @@ def phase_3b_company_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor() as cursor:
+    with pg_conn.cursor(name='company_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
-            first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
-                if not first_fetch_logged:
-                    print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
-                    first_fetch_logged = True
-                    
+            for batch in batched(cursor, 5000):
                 rows = []
                 for row in batch:
                     d = dict(zip(['company_number', 'company_name', 'company_status', 
@@ -161,16 +155,11 @@ def phase_3c_title_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor() as cursor:
+    with pg_conn.cursor(name='title_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
-            first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
-                if not first_fetch_logged:
-                    print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
-                    first_fetch_logged = True
-                    
+            for batch in batched(cursor, 5000):
                 rows = []
                 for row in batch:
                     d = dict(zip(['title_number', 'tenure', 'property_address', 
@@ -240,16 +229,11 @@ def phase_3d_owned_by_edges(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor() as cursor:
+    with pg_conn.cursor(name='owned_by_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
-            first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
-                if not first_fetch_logged:
-                    print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
-                    first_fetch_logged = True
-                    
+            for batch in batched(cursor, 5000):
                 rows = [dict(zip(['title_number', 'proprietor_name', 'company_number', 'category'], row)) 
                        for row in batch]
                 
@@ -282,16 +266,11 @@ def phase_3e_person_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor() as cursor:
+    with pg_conn.cursor(name='person_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
-            first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
-                if not first_fetch_logged:
-                    print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
-                    first_fetch_logged = True
-                    
+            for batch in batched(cursor, 5000):
                 persons = []
                 for raw_json, company_number in batch:
                     psc_data = json.loads(raw_json) if isinstance(raw_json, str) else raw_json
@@ -368,16 +347,11 @@ def phase_3f_psc_of_edges(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor() as cursor:
+    with pg_conn.cursor(name='psc_edge_cursor') as cursor:
         cursor.execute(query)
         
         with neo4j_driver.session() as session:
-            first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
-                if not first_fetch_logged:
-                    print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
-                    first_fetch_logged = True
-                    
+            for batch in batched(cursor, 5000):
                 psc_edges = []
                 for raw_json, company_number in batch:
                     psc_data = json.loads(raw_json) if isinstance(raw_json, str) else raw_json
@@ -455,16 +429,11 @@ def phase_3g_address_nodes(pg_conn, neo4j_driver):
     """
     
     total_processed = 0
-    with pg_conn.cursor() as cursor:
+    with pg_conn.cursor(name='address_cursor') as cursor:
         cursor.execute(company_query)
         
         with neo4j_driver.session() as session:
-            first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
-                if not first_fetch_logged:
-                    print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
-                    first_fetch_logged = True
-                    
+            for batch in batched(cursor, 5000):
                 addresses = []
                 edges = []
                 
@@ -532,51 +501,27 @@ def print_final_summary(neo4j_driver):
 
 def main():
     """Execute all phases of graph building."""
-    print("=== M1 PHASE 3: BUILD OWNERSHIP GRAPH ===", flush=True)
+    print("=== M1 PHASE 3: BUILD OWNERSHIP GRAPH ===")
     overall_start = time.time()
     
     # Connect to databases
     pg_url = get_database_url()
     neo4j_uri, neo4j_user, neo4j_password = get_neo4j_config()
     
-    print(f"Postgres: {pg_url.split('@')[1]}", flush=True)
-    print(f"Neo4j: {neo4j_uri}", flush=True)
-    
-    print(f"[{time.strftime('%H:%M:%S')}] About to connect to Postgres...", flush=True)
-    print(f"[{time.strftime('%H:%M:%S')}] Connecting to Neo4j at {neo4j_uri}...", flush=True)
+    print(f"Postgres: {pg_url.split('@')[1]}")
+    print(f"Neo4j: {neo4j_uri}")
     
     with psycopg.connect(pg_url) as pg_conn, \
          GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password)) as neo4j_driver:
-        print(f"[{time.strftime('%H:%M:%S')}] Both connections established", flush=True)
         
         # Execute all phases
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3a...", flush=True)
         phase_3a_schema_setup(neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3a returned", flush=True)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3b...", flush=True)
         phase_3b_company_nodes(pg_conn, neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3b returned", flush=True)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3c...", flush=True)
         phase_3c_title_nodes(pg_conn, neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3c returned", flush=True)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3d...", flush=True)
         phase_3d_owned_by_edges(pg_conn, neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3d returned", flush=True)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3e...", flush=True)
         phase_3e_person_nodes(pg_conn, neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3e returned", flush=True)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3f...", flush=True)
         phase_3f_psc_of_edges(pg_conn, neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3f returned", flush=True)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] Calling phase_3g...", flush=True)
         phase_3g_address_nodes(pg_conn, neo4j_driver)
-        print(f"[{time.strftime('%H:%M:%S')}] phase_3g returned", flush=True)
         
         print_final_summary(neo4j_driver)
     

@@ -1,0 +1,108 @@
+{# plottr — base layout for ownership graph pages
+   Pages extend this with {% block content %}.
+   Pages override {% block title %} and {% block tier %}.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Plottr{% endblock %} | Plottr</title>
+  <meta name="description" content="{% block description %}Ownership graph intelligence for UK property — Plottr Pro, Business and Enterprise.{% endblock %}">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/static/css/_brand.css">
+  <link rel="stylesheet" href="/static/css/_search.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="brand">plottr</a>
+
+    <div class="search-component">
+      <div class="search-input-wrap">
+        <span class="icon">⌕</span>
+        <input
+          id="plottr-search"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Search companies, persons, postcodes, title numbers…"
+          aria-label="Search the ownership graph"
+          aria-autocomplete="list"
+          aria-controls="plottr-search-dropdown">
+        <button class="clear-btn" aria-label="Clear search">×</button>
+      </div>
+      <div id="plottr-search-dropdown" class="search-dropdown" role="listbox"></div>
+    </div>
+
+    <div class="nav-tier">{% block tier_label %}Ownership Trace · <strong>{{ tier|default('Enterprise') }}</strong>{% endblock %}</div>
+  </div>
+</header>
+
+<div class="context-strip">
+  <div class="context-strip-inner">
+    {% block breadcrumb %}
+    <a href="/dashboard">Dashboard</a>
+    <span class="sep">›</span>
+    <a href="/dashboard/ownership">Ownership Trace</a>
+    <span class="sep">›</span>
+    <span>{% block bread_current %}Page{% endblock %}</span>
+    {% endblock %}
+    <div class="data-source-badge">
+      <span class="pulse"></span>
+      Live · {% block sources %}HMLR + Companies House{% endblock %}
+    </div>
+  </div>
+</div>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="page-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">plottr</div>
+      <div class="footer-tagline">Planning intelligence and ownership data for the United Kingdom. Built from primary sources.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/dashboard/ownership">Ownership Trace</a>
+      <a href="/search">Search</a>
+      <a href="/area">Area intelligence</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="/methodology">Methodology</a>
+      <a href="/sources">Data sources</a>
+      <a href="/api/docs">API documentation</a>
+      <a href="/use-cases">Use cases</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="/about">About</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/js/_search.js"></script>
+<script>
+  if (window.plottr && window.plottr.initSearch) {
+    window.plottr.initSearch({
+      inputSelector: '#plottr-search',
+      dropdownSelector: '#plottr-search-dropdown',
+      endpoint: '/api/search/autocomplete',
+      resultsPath: '/search',
+    });
+  }
+</script>
+
+{% block body_extra %}{% endblock %}
+</body>
+</html>

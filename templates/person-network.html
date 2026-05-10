@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Person Network · Plottr Ownership</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #0f0f0d; --paper: #f5f2eb; --paper-warm: #ede9df; --rule: #d4cfc4;
+  --navy: #1a2c4a; --navy-lt: #e6eaf0; --red: #b52d1e; --gold: #b8972a;
+  --green: #2a5c3f; --amber: #c97b12;
+  --type-display: 'Playfair Display', Georgia, serif;
+  --type-body: 'DM Sans', sans-serif;
+  --type-mono: 'DM Mono', monospace;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--paper); color: var(--ink); font-family: var(--type-body);
+       font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* MASTHEAD */
+.masthead { border-bottom: 2px solid var(--ink); padding: 0 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 48px; background: var(--paper); position: sticky; top: 0; z-index: 100; }
+.masthead-logo { font-family: var(--type-display); font-size: 1.2rem; font-weight: 500;
+                 color: var(--ink); text-decoration: none; }
+.breadcrumb { font-family: var(--type-mono); font-size: 0.68rem; letter-spacing: 0.06em;
+              color: #888; display: flex; align-items: center; gap: 0.4rem; }
+.breadcrumb a { color: #888; text-decoration: none; }
+.breadcrumb a:hover { color: var(--ink); }
+
+/* PAGE HEADER */
+.page-header { border-bottom: 1px solid var(--rule); padding: 2rem 1.5rem 1.5rem; }
+.page-kicker { font-family: var(--type-mono); font-size: 0.65rem; letter-spacing: 0.15em;
+               text-transform: uppercase; color: #888; margin-bottom: 0.5rem; }
+.page-title { font-family: var(--type-display); font-size: 1.8rem; font-weight: 400;
+              letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+.page-sub { font-size: 0.85rem; color: #666; font-weight: 300; max-width: 560px; }
+
+/* CONTROLS */
+.controls { padding: 1rem 1.5rem; border-bottom: 1px solid var(--rule);
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            background: var(--paper-warm); }
+.control-group { display: flex; align-items: center; gap: 0.5rem; }
+.control-label { font-family: var(--type-mono); font-size: 0.65rem;
+                 letter-spacing: 0.1em; text-transform: uppercase; color: #888; }
+.control-input { background: white; border: 1px solid var(--rule); padding: 0.35rem 0.6rem;
+                 font-family: var(--type-mono); font-size: 0.75rem; color: var(--ink);
+                 outline: none; width: 220px; }
+.control-input:focus { border-color: var(--navy); }
+.control-select { background: white; border: 1px solid var(--rule); padding: 0.35rem 0.6rem;
+                  font-family: var(--type-mono); font-size: 0.75rem; color: var(--ink); cursor: pointer; }
+.control-btn { background: var(--navy); color: white; border: none; padding: 0.4rem 1rem;
+               font-family: var(--type-mono); font-size: 0.72rem; letter-spacing: 0.08em;
+               text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; }
+.control-btn:hover { opacity: 0.85; }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 380px 1fr; height: calc(100vh - 200px); }
+.panel-left { border-right: 1px solid var(--rule); overflow-y: auto; }
+.panel-right { overflow: hidden; position: relative; }
+
+/* FAMILY CLUSTER LIST */
+.cluster-list { list-style: none; }
+.cluster-item { border-bottom: 1px solid var(--rule); cursor: pointer;
+                transition: background 0.12s; }
+.cluster-item:hover { background: var(--navy-lt); }
+.cluster-item.active { background: var(--navy-lt); border-left: 3px solid var(--navy); }
+.cluster-inner { padding: 0.9rem 1.2rem; }
+.cluster-surname { font-family: var(--type-display); font-size: 1.1rem; font-weight: 500;
+                   text-transform: capitalize; margin-bottom: 0.25rem; }
+.cluster-meta { display: flex; gap: 1rem; margin-bottom: 0.4rem; }
+.cluster-stat { font-family: var(--type-mono); font-size: 0.65rem; letter-spacing: 0.06em;
+                text-transform: uppercase; color: #888; }
+.cluster-stat strong { color: var(--navy); font-weight: 400; }
+.cluster-companies { font-size: 0.75rem; color: #888; white-space: nowrap;
+                     overflow: hidden; text-overflow: ellipsis; }
+.cluster-flags { display: flex; gap: 0.3rem; margin-top: 0.4rem; flex-wrap: wrap; }
+.flag { font-family: var(--type-mono); font-size: 0.6rem; letter-spacing: 0.08em;
+        text-transform: uppercase; padding: 0.1rem 0.4rem; border: 1px solid currentColor; }
+.flag--sanctions { color: var(--red); }
+.flag--pep { color: var(--amber); }
+.flag--offshore { color: var(--navy); }
+.flag--nominee { color: #888; }
+
+/* DETAIL PANEL */
+.detail { padding: 1.5rem; height: 100%; overflow-y: auto; }
+.detail-empty { display: flex; align-items: center; justify-content: center;
+                height: 100%; flex-direction: column; gap: 0.8rem; }
+.detail-empty-icon { font-family: var(--type-mono); font-size: 2rem; color: #ccc; }
+.detail-empty-text { font-family: var(--type-mono); font-size: 0.72rem;
+                     letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; }
+
+/* CLUSTER DETAIL */
+.detail-header { margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--rule); }
+.detail-name { font-family: var(--type-display); font-size: 1.6rem; font-weight: 400;
+               text-transform: capitalize; margin-bottom: 0.6rem; }
+.detail-stats { display: flex; gap: 2rem; }
+.detail-stat-num { font-family: var(--type-display); font-size: 1.3rem; display: block; line-height: 1; }
+.detail-stat-lbl { font-family: var(--type-mono); font-size: 0.62rem; letter-spacing: 0.08em;
+                   text-transform: uppercase; color: #888; }
+
+/* PERSON CARDS */
+.persons-grid { display: flex; flex-direction: column; gap: 0; margin-bottom: 1.5rem; }
+.section-label { font-family: var(--type-mono); font-size: 0.65rem; letter-spacing: 0.12em;
+                 text-transform: uppercase; color: #888; margin-bottom: 0.8rem;
+                 padding-bottom: 0.4rem; border-bottom: 1px solid var(--rule); }
+.person-card { border: 1px solid var(--rule); margin-bottom: 0.6rem; }
+.person-card-header { padding: 0.8rem 1rem; display: flex; align-items: center;
+                      justify-content: space-between; background: white; cursor: pointer; }
+.person-card-name { font-size: 0.88rem; font-weight: 500; }
+.person-card-meta { font-family: var(--type-mono); font-size: 0.65rem; color: #888;
+                    letter-spacing: 0.05em; }
+.person-badge { font-family: var(--type-mono); font-size: 0.62rem; letter-spacing: 0.08em;
+                text-transform: uppercase; padding: 0.2rem 0.5rem; }
+.person-badge--sanction { background: #fce8e6; color: var(--red); }
+.person-badge--pep { background: #fef3e2; color: var(--amber); }
+.person-badge--clean { background: #e8f0eb; color: var(--green); }
+
+/* COMPANY TABLE */
+.company-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 1rem; }
+.company-table th { font-family: var(--type-mono); font-size: 0.62rem; letter-spacing: 0.08em;
+                    text-transform: uppercase; color: #888; text-align: left;
+                    padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--rule); font-weight: 400; }
+.company-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.company-table tr:last-child td { border-bottom: none; }
+.company-table tr:hover td { background: var(--paper-warm); }
+.crn { font-family: var(--type-mono); font-size: 0.7rem; color: #888; }
+.titles-count { font-family: var(--type-display); font-size: 1rem; font-weight: 500;
+                color: var(--navy); }
+.tenure-badge { display: inline-block; font-family: var(--type-mono); font-size: 0.6rem;
+                padding: 0.1rem 0.35rem; border: 1px solid var(--rule);
+                letter-spacing: 0.06em; text-transform: uppercase; color: #888; }
+
+/* NETWORK MAP PLACEHOLDER */
+.network-canvas { width: 100%; height: 100%; background: var(--ink);
+                  display: flex; align-items: center; justify-content: center;
+                  flex-direction: column; gap: 1rem; }
+.network-canvas-text { font-family: var(--type-mono); font-size: 0.7rem;
+                        letter-spacing: 0.1em; text-transform: uppercase; color: #555; }
+.network-nodes { position: relative; width: 280px; height: 280px; }
+.node { position: absolute; border-radius: 50%; display: flex;
+        align-items: center; justify-content: center; font-family: var(--type-mono);
+        font-size: 0.55rem; color: white; text-align: center; cursor: pointer; transition: transform 0.2s; }
+.node:hover { transform: scale(1.1); }
+.node--person { background: var(--gold); width: 52px; height: 52px; }
+.node--company { background: var(--navy); width: 38px; height: 38px; font-size: 0.48rem; }
+.node--title { background: #3a4a3a; width: 28px; height: 28px; font-size: 0.42rem; }
+.edge { position: absolute; background: rgba(255,255,255,0.1);
+        transform-origin: left center; pointer-events: none; height: 1px; }
+
+/* TAB BAR */
+.tab-bar { display: flex; border-bottom: 1px solid var(--rule); }
+.tab { padding: 0.7rem 1.2rem; font-family: var(--type-mono); font-size: 0.68rem;
+       letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+       color: #888; border-bottom: 2px solid transparent; transition: color 0.15s; }
+.tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* RISK BANNER */
+.risk-banner { padding: 0.7rem 1rem; margin-bottom: 1rem; display: flex;
+               align-items: center; gap: 0.8rem; font-size: 0.82rem; }
+.risk-banner--high { background: #fce8e6; border-left: 3px solid var(--red); }
+.risk-banner--medium { background: #fef3e2; border-left: 3px solid var(--amber); }
+.risk-banner--clean { background: #e8f0eb; border-left: 3px solid var(--green); }
+.risk-icon { font-family: var(--type-mono); font-size: 0.65rem; font-weight: 400; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <a class="masthead-logo" href="/">plottr</a>
+  <nav class="breadcrumb">
+    <a href="/dashboard">Dashboard</a> ›
+    <a href="/ownership">Ownership Trace</a> ›
+    Person Network
+  </nav>
+  <span style="font-family:var(--type-mono);font-size:0.68rem;color:#888">
+    ENTERPRISE · 9,540,405 persons indexed
+  </span>
+</header>
+
+<div class="page-header">
+  <p class="page-kicker">Intelligence · Person Network</p>
+  <h1 class="page-title">Who keeps appearing.</h1>
+  <p class="page-sub">Persons of significant control ranked by structural reach. Family clusters, high-frequency individuals, and network hubs — with sanctions and PEP flags applied where matched.</p>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <span class="control-label">Search surname or name</span>
+    <input class="control-input" type="text" placeholder="e.g. grosvenor, cadogan, patel …" id="search-input">
+  </div>
+  <div class="control-group">
+    <span class="control-label">Min. companies</span>
+    <select class="control-select" id="min-companies">
+      <option value="3">3+</option>
+      <option value="5">5+</option>
+      <option value="10" selected>10+</option>
+      <option value="25">25+</option>
+      <option value="50">50+</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <span class="control-label">Flags</span>
+    <select class="control-select" id="flag-filter">
+      <option value="all">All</option>
+      <option value="sanctions">Sanctions match</option>
+      <option value="pep">PEP / political donor</option>
+      <option value="offshore">Offshore holdings</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <span class="control-label">View</span>
+    <select class="control-select" id="view-mode">
+      <option value="families">Family clusters</option>
+      <option value="individuals">Individuals</option>
+    </select>
+  </div>
+  <button class="control-btn" onclick="applyFilters()">Apply →</button>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: CLUSTER LIST -->
+  <aside class="panel-left">
+    <ul class="cluster-list" id="cluster-list">
+
+      <!-- Grosvenor family — demo data -->
+      <li class="cluster-item active" onclick="selectCluster('grosvenor')">
+        <div class="cluster-inner">
+          <div class="cluster-surname">Grosvenor</div>
+          <div class="cluster-meta">
+            <span class="cluster-stat"><strong>3</strong> persons</span>
+            <span class="cluster-stat"><strong>14</strong> companies</span>
+            <span class="cluster-stat"><strong>312</strong> titles</span>
+          </div>
+          <div class="cluster-companies">Grosvenor Group Ltd · Grosvenor Britain &amp; Ireland · Grosvenor (Mayfair) Estate Ltd …</div>
+          <div class="cluster-flags">
+            <span class="flag flag--pep">PEP · declared</span>
+            <span class="flag flag--offshore">3 offshore entities</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="cluster-item" onclick="selectCluster('cadogan')">
+        <div class="cluster-inner">
+          <div class="cluster-surname">Cadogan</div>
+          <div class="cluster-meta">
+            <span class="cluster-stat"><strong>2</strong> persons</span>
+            <span class="cluster-stat"><strong>8</strong> companies</span>
+            <span class="cluster-stat"><strong>192</strong> titles</span>
+          </div>
+          <div class="cluster-companies">Cadogan Estates Ltd · Cadogan Group Ltd · Hans Place Holdings …</div>
+          <div class="cluster-flags">
+            <span class="flag flag--pep">PEP · aristocracy</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="cluster-item" onclick="selectCluster('patel')">
+        <div class="cluster-inner">
+          <div class="cluster-surname">Patel</div>
+          <div class="cluster-meta">
+            <span class="cluster-stat"><strong>4</strong> persons</span>
+            <span class="cluster-stat"><strong>23</strong> companies</span>
+            <span class="cluster-stat"><strong>87</strong> titles</span>
+          </div>
+          <div class="cluster-companies">MP Group Holdings Ltd · Eastgate Properties Ltd · Silverbridge Inv. …</div>
+          <div class="cluster-flags">
+            <span class="flag flag--offshore">BVI holdings</span>
+            <span class="flag flag--nominee">nominee address</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="cluster-item" onclick="selectCluster('al-thani')">
+        <div class="cluster-inner">
+          <div class="cluster-surname">Al-Thani</div>
+          <div class="cluster-meta">
+            <span class="cluster-stat"><strong>2</strong> persons</span>
+            <span class="cluster-stat"><strong>6</strong> companies</span>
+            <span class="cluster-stat"><strong>44</strong> titles</span>
+          </div>
+          <div class="cluster-companies">Qatari Diar Real Estate · QD London Development …</div>
+          <div class="cluster-flags">
+            <span class="flag flag--pep">PEP · sovereign</span>
+            <span class="flag flag--offshore">Qatar incorporated</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="cluster-item">
+        <div class="cluster-inner">
+          <div class="cluster-surname">Reuben</div>
+          <div class="cluster-meta">
+            <span class="cluster-stat"><strong>2</strong> persons</span>
+            <span class="cluster-stat"><strong>11</strong> companies</span>
+            <span class="cluster-stat"><strong>38</strong> titles</span>
+          </div>
+          <div class="cluster-companies">Reuben Brothers Ltd · RB Capital Partners …</div>
+          <div class="cluster-flags">
+            <span class="flag flag--pep">Electoral donor</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="cluster-item">
+        <div class="cluster-inner">
+          <div class="cluster-surname">Hinduja</div>
+          <div class="cluster-meta">
+            <span class="cluster-stat"><strong>3</strong> persons</span>
+            <span class="cluster-stat"><strong>9</strong> companies</span>
+            <span class="cluster-stat"><strong>21</strong> titles</span>
+          </div>
+          <div class="cluster-companies">Hinduja Group Ltd · Gulf Oil International …</div>
+          <div class="cluster-flags">
+            <span class="flag flag--pep">PEP · political donor</span>
+            <span class="flag flag--offshore">Channel Islands</span>
+          </div>
+        </div>
+      </li>
+
+    </ul>
+  </aside>
+
+  <!-- RIGHT: DETAIL VIEW -->
+  <main class="panel-right">
+    <div class="detail" id="detail-panel">
+
+      <!-- GROSVENOR DETAIL — shown by default -->
+      <div class="risk-banner risk-banner--medium">
+        <span class="risk-icon">⚑ MEDIUM RISK</span>
+        <span>2 of 14 entities are overseas-incorporated with partial UBO disclosure.
+              Hugh Grosvenor flagged as Politically Exposed Person (declared beneficiary of a family settlement).</span>
+      </div>
+
+      <div class="detail-header">
+        <h2 class="detail-name">Grosvenor family cluster</h2>
+        <div class="detail-stats">
+          <div>
+            <span class="detail-stat-num" style="color:var(--navy)">3</span>
+            <span class="detail-stat-lbl">Persons</span>
+          </div>
+          <div>
+            <span class="detail-stat-num" style="color:var(--navy)">14</span>
+            <span class="detail-stat-lbl">Companies</span>
+          </div>
+          <div>
+            <span class="detail-stat-num" style="color:var(--navy)">312</span>
+            <span class="detail-stat-lbl">Titles held</span>
+          </div>
+          <div>
+            <span class="detail-stat-num" style="color:var(--navy)">£9.8bn</span>
+            <span class="detail-stat-lbl">Est. portfolio</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('persons', this)">Persons (3)</div>
+        <div class="tab" onclick="switchTab('companies', this)">Companies (14)</div>
+        <div class="tab" onclick="switchTab('network', this)">Network map</div>
+        <div class="tab" onclick="switchTab('flags', this)">Risk flags</div>
+      </div>
+
+      <!-- PERSONS TAB -->
+      <div class="tab-content active" id="tab-persons" style="padding:1rem 0">
+        <p class="section-label">Persons of significant control</p>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div>
+              <div class="person-card-name">Hugh Grosvenor, 7th Duke of Westminster</div>
+              <div class="person-card-meta">Born 1991 · British · Resident UK</div>
+            </div>
+            <span class="person-badge person-badge--pep">PEP · declared</span>
+          </div>
+          <div style="padding:0.8rem 1rem;border-top:1px solid var(--rule);font-size:0.8rem;color:#555">
+            Listed beneficiary of the Grosvenor Estate Settlement trust. Controls Grosvenor Group Limited and 13 subsidiaries via trust beneficiary status. Nature of control: <em>ownership of shares 75% or more · voting rights 75% or more</em>.
+            <div style="margin-top:0.6rem;display:flex;gap:0.8rem">
+              <span class="tenure-badge">14 companies controlled</span>
+              <span class="tenure-badge">312 titles via group</span>
+              <span class="tenure-badge">Electoral donor · £50k+</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div>
+              <div class="person-card-name">Mark Preston</div>
+              <div class="person-card-meta">Born 1962 · British · Resident UK</div>
+            </div>
+            <span class="person-badge person-badge--clean">Clean</span>
+          </div>
+          <div style="padding:0.8rem 1rem;border-top:1px solid var(--rule);font-size:0.8rem;color:#555">
+            CEO of Grosvenor Group Limited. PSC declaration covers 8 companies via right to appoint and remove majority of board. Likely executive PSC, not beneficial owner PSC.
+            <div style="margin-top:0.6rem">
+              <span class="tenure-badge">8 companies · board control</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div>
+              <div class="person-card-name">Lord Robert Grosvenor</div>
+              <div class="person-card-meta">Born 1953 · British · Resident UK</div>
+            </div>
+            <span class="person-badge person-badge--pep">PEP · aristocracy</span>
+          </div>
+          <div style="padding:0.8rem 1rem;border-top:1px solid var(--rule);font-size:0.8rem;color:#555">
+            Grosvenor Estate Holdings and 2 further entities. Nature of control: <em>significant influence or control</em>.
+            <div style="margin-top:0.6rem">
+              <span class="tenure-badge">3 companies</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPANIES TAB -->
+      <div class="tab-content" id="tab-companies" style="padding:1rem 0">
+        <p class="section-label">All entities in cluster · sorted by title count</p>
+        <table class="company-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>CRN</th>
+              <th>Status</th>
+              <th>Titles</th>
+              <th>Jurisdiction</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Grosvenor (Mayfair) Estate Ltd</td>
+              <td class="crn">00099912</td>
+              <td><span class="tenure-badge" style="color:var(--green)">Active</span></td>
+              <td><span class="titles-count">142</span></td>
+              <td>UK</td>
+            </tr>
+            <tr>
+              <td>Grosvenor (Belgravia) Estate Ltd</td>
+              <td class="crn">00099913</td>
+              <td><span class="tenure-badge" style="color:var(--green)">Active</span></td>
+              <td><span class="titles-count">87</span></td>
+              <td>UK</td>
+            </tr>
+            <tr>
+              <td>Grosvenor Rural Estates Ltd</td>
+              <td class="crn">00211889</td>
+              <td><span class="tenure-badge" style="color:var(--green)">Active</span></td>
+              <td><span class="titles-count">21</span></td>
+              <td>UK</td>
+            </tr>
+            <tr>
+              <td>Grosvenor Holdings (Cayman) Ltd</td>
+              <td class="crn">—</td>
+              <td><span class="tenure-badge" style="color:var(--amber)">Foreign</span></td>
+              <td><span class="titles-count">8</span></td>
+              <td>Cayman Is. ⚑</td>
+            </tr>
+            <tr>
+              <td>Grosvenor (West End) Properties Ltd</td>
+              <td class="crn">00231445</td>
+              <td><span class="tenure-badge" style="color:var(--green)">Active</span></td>
+              <td><span class="titles-count">38</span></td>
+              <td>UK</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- NETWORK MAP TAB -->
+      <div class="tab-content" id="tab-network">
+        <div class="network-canvas" style="height:420px">
+          <div class="network-nodes">
+            <!-- Person nodes -->
+            <div class="node node--person" style="top:50%;left:50%;transform:translate(-50%,-50%)" title="Hugh Grosvenor">HG</div>
+            <div class="node node--person" style="top:15%;left:20%" title="Lord Robert Grosvenor">LRG</div>
+            <div class="node node--person" style="top:15%;left:70%" title="Mark Preston">MP</div>
+            <!-- Company nodes -->
+            <div class="node node--company" style="top:70%;left:20%">Mayfair Est.</div>
+            <div class="node node--company" style="top:70%;left:42%">Belgravia Est.</div>
+            <div class="node node--company" style="top:70%;left:62%">West End Props</div>
+            <div class="node node--company" style="top:30%;left:38%">Grosvenor Group</div>
+            <div class="node node--company" style="top:55%;left:78%">Rural Estates</div>
+            <div class="node node--company" style="top:85%;left:80%;background:#6b4a1a">Cayman Ltd ⚑</div>
+          </div>
+          <p class="network-canvas-text">Interactive graph · Leaflet/D3 in production</p>
+        </div>
+      </div>
+
+      <!-- FLAGS TAB -->
+      <div class="tab-content" id="tab-flags" style="padding:1rem 0">
+        <p class="section-label">Risk flags · automated detection</p>
+
+        <div class="risk-banner risk-banner--medium" style="margin-bottom:0.8rem">
+          <div>
+            <strong style="font-family:var(--type-mono);font-size:0.7rem">PEP — POLITICALLY EXPOSED PERSON</strong><br>
+            <span style="font-size:0.8rem;color:#555">Hugh Grosvenor declared as beneficiary of a family settlement in PSC filings of Grosvenor Group Limited. Matched against Electoral Commission donor records (2021 filing, £50,000+ band). Lord Robert Grosvenor matched as hereditary peer.</span>
+          </div>
+        </div>
+
+        <div class="risk-banner risk-banner--medium" style="margin-bottom:0.8rem">
+          <div>
+            <strong style="font-family:var(--type-mono);font-size:0.7rem">OFFSHORE ENTITY — CAYMAN ISLANDS</strong><br>
+            <span style="font-size:0.8rem;color:#555">Grosvenor Holdings (Cayman) Ltd holds 8 titles in Westminster. No PSC person traceable via UK register. Entity predates August 2022 RoE requirement. Partial disclosure only.</span>
+          </div>
+        </div>
+
+        <div class="risk-banner risk-banner--clean" style="margin-bottom:0.8rem">
+          <div>
+            <strong style="font-family:var(--type-mono);font-size:0.7rem">SANCTIONS — NO MATCH</strong><br>
+            <span style="font-size:0.8rem;color:#555">No OFAC SDN or EU consolidated sanctions matches found for any person in this cluster at HIGH confidence threshold. Checked against 42,000+ entries. Medium/low similarity matches: 0.</span>
+          </div>
+        </div>
+
+        <div class="risk-banner risk-banner--clean">
+          <div>
+            <strong style="font-family:var(--type-mono);font-size:0.7rem">NOMINEE ADDRESS — NO MATCH</strong><br>
+            <span style="font-size:0.8rem;color:#555">Registered office at 70 Grosvenor Street, W1K 3JP is shared by 12 group companies — below the 50-company nominee threshold. Expected for a genuine group structure.</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /detail -->
+  </main>
+
+</div><!-- /layout -->
+
+<script>
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const tc = document.getElementById('tab-' + name);
+  if (tc) tc.classList.add('active');
+}
+
+function selectCluster(name) {
+  document.querySelectorAll('.cluster-item').forEach(i => i.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  // In production: fetch /api/person-network/cluster/{name} and re-render detail panel
+}
+
+function applyFilters() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  document.querySelectorAll('.cluster-item').forEach(item => {
+    const surname = item.querySelector('.cluster-surname').textContent.toLowerCase();
+    item.style.display = (!q || surname.includes(q)) ? '' : 'none';
+  });
+}
+
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyFilters();
+});
+</script>
+
+</body>
+</html>

@@ -35,6 +35,7 @@ from typing import Iterator
 logger = logging.getLogger(__name__)
 
 CH_INDEX_URL = "https://download.companieshouse.gov.uk/en_output.html"
+CH_PSC_INDEX_URL = "https://download.companieshouse.gov.uk/en_pscdata.html"
 CH_BULK_BASE = "https://download.companieshouse.gov.uk/"
 CH_API_BASE  = "https://api.company-information.service.gov.uk"
 RAW_DIR      = Path(__file__).parents[4] / "data" / "raw" / "companies_house"
@@ -53,9 +54,9 @@ class _LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-def _fetch_bulk_index() -> list[str]:
+def _fetch_bulk_index(index_url: str = CH_INDEX_URL) -> list[str]:
     """Return list of filenames available on the CH bulk download index page."""
-    with urllib.request.urlopen(CH_INDEX_URL, timeout=30) as r:
+    with urllib.request.urlopen(index_url, timeout=30) as r:
         html = r.read().decode("utf-8", errors="replace")
     parser = _LinkParser()
     parser.feed(html)
@@ -80,16 +81,16 @@ def print_bulk_manifest():
     print(f"\n{len(files)} files listed.")
 
 
-def _find_bulk_files(pattern: str) -> list[str]:
+def _find_bulk_files(pattern: str, index_url: str = CH_INDEX_URL) -> list[str]:
     """
     Return filenames from the live CH index matching a regex pattern.
     Raises RuntimeError if no matches found.
     """
-    files = _fetch_bulk_index()
+    files = _fetch_bulk_index(index_url)
     matches = [f for f in files if re.search(pattern, f, re.IGNORECASE)]
     if not matches:
         raise RuntimeError(
-            f"No CH bulk files matching '{pattern}' found at {CH_INDEX_URL}. "
+            f"No CH bulk files matching '{pattern}' found at {index_url}. "
             "Check the index manually for the current filename format."
         )
     return sorted(matches)
@@ -171,7 +172,8 @@ def download_psc_snapshot(dest_dir: Path | None = None) -> list[Path]:
     #   persons-with-significant-control-snapshot-YYYY-MM-DD.zip
     #   psc-snapshot-YYYY-MM-DD_1of3.txt.gz
     matches = _find_bulk_files(
-        r"(persons-with-significant-control|psc-snapshot).*\.(zip|gz|txt\.gz)"
+        r"(persons-with-significant-control|psc-snapshot).*\.(zip|gz|txt\.gz)",
+        CH_PSC_INDEX_URL
     )
     print(f"  Found {len(matches)} PSC file(s)")
     paths = []

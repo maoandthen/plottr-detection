@@ -110,7 +110,7 @@ def phase_3b_company_nodes(pg_conn, neo4j_driver):
         
         with neo4j_driver.session() as session:
             first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
+            for batch in fetch_batches(cursor, 5000):
                 if not first_fetch_logged:
                     print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
                     first_fetch_logged = True
@@ -166,7 +166,7 @@ def phase_3c_title_nodes(pg_conn, neo4j_driver):
         
         with neo4j_driver.session() as session:
             first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
+            for batch in fetch_batches(cursor, 5000):
                 if not first_fetch_logged:
                     print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
                     first_fetch_logged = True
@@ -245,7 +245,7 @@ def phase_3d_owned_by_edges(pg_conn, neo4j_driver):
         
         with neo4j_driver.session() as session:
             first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
+            for batch in fetch_batches(cursor, 5000):
                 if not first_fetch_logged:
                     print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
                     first_fetch_logged = True
@@ -287,7 +287,7 @@ def phase_3e_person_nodes(pg_conn, neo4j_driver):
         
         with neo4j_driver.session() as session:
             first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
+            for batch in fetch_batches(cursor, 5000):
                 if not first_fetch_logged:
                     print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
                     first_fetch_logged = True
@@ -373,7 +373,7 @@ def phase_3f_psc_of_edges(pg_conn, neo4j_driver):
         
         with neo4j_driver.session() as session:
             first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
+            for batch in fetch_batches(cursor, 5000):
                 if not first_fetch_logged:
                     print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
                     first_fetch_logged = True
@@ -460,7 +460,7 @@ def phase_3g_address_nodes(pg_conn, neo4j_driver):
         
         with neo4j_driver.session() as session:
             first_fetch_logged = False
-            for batch in fetch_batches(cursor, 1000):
+            for batch in fetch_batches(cursor, 5000):
                 if not first_fetch_logged:
                     print(f"[{time.strftime('%H:%M:%S')}] First batch fetched: {len(batch)} rows", flush=True)
                     first_fetch_logged = True

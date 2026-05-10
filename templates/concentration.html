@@ -1,0 +1,461 @@
+{% extends "_layout.html" %}
+
+{% block title %}Ownership Concentration — {{ area.name }}{% endblock %}
+{% block description %}Top corporate landowners in {{ area.name }}: title counts, ownership concentration, foreign-held property breakdown.{% endblock %}
+{% block tier_label %}Concentration · <strong>Business</strong>{% endblock %}
+{% block bread_current %}{{ area.name }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* Concentration-specific layout: 3-col working tool */
+  .tool-header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .tool-header h1 {
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .tool-header h1 em { color: var(--accent); font-style: italic; }
+  .tool-header .lede {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--grey-1);
+    max-width: 640px;
+  }
+
+  /* Filter bar — sticky, working-tool feel */
+  .filter-bar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--grey-2);
+    padding: 14px 0;
+    margin-bottom: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .filter-bar-inner {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-bar .label {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--grey-1);
+    margin-right: 4px;
+    font-weight: 500;
+  }
+  .filter-bar .applied {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 6px 12px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .filter-bar .applied .x {
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 14px;
+  }
+  .filter-bar .actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* KPI strip — denser than estate profile */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--grey-2);
+    border: 1px solid var(--grey-2);
+    margin: 32px 0;
+  }
+  .kpi-cell {
+    background: var(--paper);
+    padding: 22px 24px;
+  }
+  .kpi-cell .label {
+    font-family: var(--font-sans);
+    font-size: var(--t-micro);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--grey-1);
+    margin-bottom: 8px;
+  }
+  .kpi-cell .val {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .kpi-cell .sub {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    color: var(--grey-1);
+    margin-top: 4px;
+  }
+
+  /* Two-col main: chart + map */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .chart-block, .map-block {
+    background: var(--paper);
+    border: 1px solid var(--grey-2);
+    padding: 28px;
+  }
+  .chart-block h3, .map-block h3 {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--grey-1);
+    font-weight: 500;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chart-block h3 .meta, .map-block h3 .meta {
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--grey-1);
+  }
+
+  /* Horizontal bar chart */
+  .hbar { padding: 8px 0; }
+  .hbar-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 60px;
+    gap: 14px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--grey-3);
+  }
+  .hbar-row:last-child { border-bottom: none; }
+  .hbar-name {
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hbar-name .sub {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    color: var(--grey-1);
+    font-weight: 400;
+  }
+  .hbar-track {
+    height: 16px;
+    background: var(--grey-3);
+    position: relative;
+  }
+  .hbar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--ink);
+  }
+  .hbar-fill.foreign { background: var(--accent); }
+  .hbar-fill.uk { background: var(--ink); }
+  .hbar-count {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  /* Map */
+  .map-canvas {
+    background: var(--paper-warm);
+    border: 1px solid var(--grey-3);
+    height: 360px;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-legend {
+    margin-top: 16px;
+    display: flex;
+    gap: 16px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--grey-1);
+  }
+  .map-legend .swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Detailed owners table */
+  .table-section {
+    background: var(--paper);
+    border: 1px solid var(--grey-2);
+    margin-bottom: 32px;
+  }
+  .table-section .section-head {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--grey-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .table-section h3 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .table-section .table-meta {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    color: var(--grey-1);
+  }
+  .table-section .data-table {
+    margin: 0;
+  }
+  .table-section .data-table th {
+    padding: 14px 24px;
+  }
+  .table-section .data-table td {
+    padding: 16px 24px;
+  }
+
+  /* Pagination */
+  .pagination {
+    padding: 16px 28px;
+    border-top: 1px solid var(--grey-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--grey-1);
+  }
+  .pagination .controls {
+    display: flex;
+    gap: 6px;
+  }
+  .pagination button {
+    border: 1px solid var(--grey-2);
+    background: transparent;
+    padding: 6px 12px;
+    cursor: pointer;
+    font: inherit;
+    border-radius: 3px;
+  }
+  .pagination button:hover { border-color: var(--ink); }
+  .pagination button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+    .hbar-row { grid-template-columns: 1fr 60px; }
+    .hbar-track { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="tool-header">
+  <div class="kicker">Concentration Analysis</div>
+  <h1 style="margin-top: 12px;">Who owns <em>{{ area.name }}</em>?</h1>
+  <p class="lede">Top corporate landowners in this {{ area.kind }}, ranked by number of titles. Filter by ownership type, tenure, or country of incorporation.</p>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-bar-inner">
+    <span class="label">Area</span>
+    <span class="applied">{{ area.name }} <span class="x">×</span></span>
+    {% if filters.ownership_type %}
+    <span class="applied">{{ filters.ownership_type }} <span class="x">×</span></span>
+    {% endif %}
+    {% if filters.country %}
+    <span class="applied">Country: {{ filters.country }} <span class="x">×</span></span>
+    {% endif %}
+
+    <div class="input-group" style="margin-left: 18px;">
+      <label>Min. titles</label>
+      <input type="number" placeholder="1" value="{{ filters.min_titles|default(1) }}">
+    </div>
+    <div class="input-group">
+      <label>Tenure</label>
+      <select>
+        <option>All</option>
+        <option>Freehold only</option>
+        <option>Leasehold only</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost">Reset</button>
+      <button class="btn btn-primary">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="kpi-strip">
+  <div class="kpi-cell">
+    <div class="label">Total titles</div>
+    <div class="val">{{ stats.total_titles|format_number }}</div>
+    <div class="sub">in {{ area.name }}</div>
+  </div>
+  <div class="kpi-cell">
+    <div class="label">Corporate-held</div>
+    <div class="val">{{ stats.corporate_pct }}%</div>
+    <div class="sub">{{ stats.corporate_titles|format_number }} of {{ stats.total_titles|format_number }}</div>
+  </div>
+  <div class="kpi-cell">
+    <div class="label">Top 10 concentration</div>
+    <div class="val">{{ stats.top_10_pct }}%</div>
+    <div class="sub">{{ stats.top_10_titles|format_number }} held by top 10 owners</div>
+  </div>
+  <div class="kpi-cell">
+    <div class="label">Overseas-incorporated</div>
+    <div class="val" style="color: var(--accent);">{{ stats.foreign_pct }}%</div>
+    <div class="sub">{{ stats.foreign_titles|format_number }} titles · {{ stats.foreign_countries }} jurisdictions</div>
+  </div>
+</div>
+
+<div class="main-grid">
+
+  <div class="chart-block">
+    <h3>Top 10 corporate owners <span class="meta">by title count</span></h3>
+    <div class="hbar">
+      {% for owner in top_owners %}
+      <div class="hbar-row">
+        <div class="hbar-name">
+          {{ owner.name }}
+          <span class="sub">{% if owner.crn %}{{ owner.crn }}{% else %}Foreign — {{ owner.jurisdiction|default('—') }}{% endif %}</span>
+        </div>
+        <div class="hbar-track">
+          <div class="hbar-fill {% if owner.foreign %}foreign{% else %}uk{% endif %}" style="width: {{ owner.bar_pct }}%;"></div>
+        </div>
+        <div class="hbar-count">{{ owner.title_count }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="map-legend" style="border-top: 1px solid var(--grey-3); padding-top: 16px; margin-top: 16px;">
+      <span><span class="swatch" style="background: var(--ink);"></span>UK incorporated</span>
+      <span><span class="swatch" style="background: var(--accent);"></span>Overseas incorporated</span>
+    </div>
+  </div>
+
+  <div class="map-block">
+    <h3>Title plots <span class="meta">{{ area.name }}</span></h3>
+    <div class="map-canvas">
+      {% if area.map_svg %}
+      {{ area.map_svg|safe }}
+      {% else %}
+      <div class="empty-state">
+        <div class="icon">⚏</div>
+        <p>Map will render with title locations</p>
+      </div>
+      {% endif %}
+    </div>
+    <div class="map-legend">
+      <span><span class="swatch" style="background: var(--ink);"></span>Single owner cluster</span>
+      <span><span class="swatch" style="background: var(--accent);"></span>Foreign-held</span>
+      <span><span class="swatch" style="background: var(--warning);"></span>Concentrated owner</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="table-section">
+  <div class="section-head">
+    <div>
+      <h3>All corporate landowners in {{ area.name }}</h3>
+      <div class="table-meta">{{ owners|length }} entities · sorted by title count</div>
+    </div>
+    <div class="actions" style="display: flex; gap: 8px;">
+      <button class="btn btn-ghost">Export CSV</button>
+      <button class="btn">View on map</button>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="sortable sorted-desc">Owner</th>
+        <th>Type</th>
+        <th class="sortable num">Titles</th>
+        <th class="sortable num">% of area</th>
+        <th>Latest activity</th>
+        <th>Trace</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for owner in owners %}
+      <tr>
+        <td>
+          <div class="entity-name">{{ owner.name }}</div>
+          <div class="entity-sub">
+            {% if owner.crn %}CH {{ owner.crn }}{% else %}{{ owner.jurisdiction }}{% endif %}
+            {% if owner.registered_office %}· {{ owner.registered_office }}{% endif %}
+          </div>
+        </td>
+        <td>
+          {% if owner.foreign %}
+          <span class="tag warn">Overseas</span>
+          {% elif owner.public %}
+          <span class="tag info">Listed</span>
+          {% else %}
+          <span class="tag muted">UK Ltd</span>
+          {% endif %}
+        </td>
+        <td class="num">{{ owner.title_count }}</td>
+        <td class="num">{{ "%.1f"|format(owner.area_pct) }}%</td>
+        <td>{{ owner.last_activity }}</td>
+        <td>
+          <a href="/dashboard/ownership/estate/{{ owner.slug }}" class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;">Open profile →</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="pagination">
+    <div>Showing {{ pagination.from }}–{{ pagination.to }} of {{ pagination.total }}</div>
+    <div class="controls">
+      <button>← Prev</button>
+      <button class="active">1</button>
+      <button>2</button>
+      <button>3</button>
+      <button>…</button>
+      <button>{{ pagination.last_page }}</button>
+      <button>Next →</button>
+    </div>
+  </div>
+</div>
+
+<div class="disclosure" style="margin-bottom: 60px;">
+  <p><strong>About this view.</strong> Concentration figures count titles, not properties — a single building may have multiple titles, and a single title may cover multiple addresses. Title counts are from HMLR CCOD/OCOD as of {{ data_as_of|format_date }}. Corporate-held proportion uses HMLR's proprietorship category classification.</p>
+  <p><strong>Forecast data not included.</strong> This view shows current-state ownership only. For ownership-change tracking and acquisition alerts, see the <a href="/dashboard/ownership/alerts">Ownership Alerts</a> tab.</p>
+</div>
+
+{% endblock %}

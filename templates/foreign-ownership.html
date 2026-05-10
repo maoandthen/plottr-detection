@@ -1,0 +1,496 @@
+{% extends "_layout.html" %}
+
+{% block title %}Foreign Ownership — {{ district.name }}{% endblock %}
+{% block description %}Overseas-incorporated property ownership in {{ district.name }}. Country breakdown, jurisdiction risk flags, beneficial ownership where disclosed.{% endblock %}
+{% block tier_label %}Foreign Ownership · <strong>Newsroom / Business</strong>{% endblock %}
+{% block bread_current %}{{ district.name }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* Foreign ownership specific */
+  .lede-block {
+    padding: 56px 0 40px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .lede-block .standfirst {
+    max-width: 720px;
+    margin-top: 18px;
+  }
+  .lede-block .meta {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--grey-1);
+    margin-top: 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .lede-block .meta .updated::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--success);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Headline KPI */
+  .kpi-headline {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 40px 48px;
+    margin: 32px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+  }
+  .kpi-headline .item .label {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 10px;
+  }
+  .kpi-headline .item .val {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.0;
+    color: var(--paper);
+  }
+  .kpi-headline .item .val.accent { color: var(--accent); }
+  .kpi-headline .item .sub {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+  }
+
+  /* Country ranking */
+  .country-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 48px;
+  }
+  .country-card {
+    background: var(--paper);
+    border: 1px solid var(--grey-2);
+    padding: 28px 32px;
+  }
+  .country-card.danger {
+    border-left: 4px solid var(--accent);
+  }
+  .country-card.warning {
+    border-left: 4px solid var(--warning);
+  }
+  .country-card .rank {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--grey-1);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .country-card .country-name {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .country-card .flag-tag {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .country-card .flag-tag.tax-haven { background: var(--accent-soft); color: var(--accent); }
+  .country-card .flag-tag.sanctions-listed { background: #ffe2e2; color: #aa0000; }
+  .country-card .flag-tag.transparent { background: #e0f0e3; color: var(--success); }
+  .country-card .flag-tag.beneficial-disclosed { background: #e3eef9; color: var(--info); }
+
+  .country-card .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--grey-3);
+  }
+  .country-card .stat .label {
+    font-family: var(--font-sans);
+    font-size: var(--t-micro);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--grey-1);
+    margin-bottom: 4px;
+  }
+  .country-card .stat .val {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .country-card .narrative {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--grey-1);
+    line-height: 1.55;
+    margin-top: 16px;
+  }
+
+  /* Comparative bar chart */
+  .comparison-block {
+    background: var(--paper);
+    border: 1px solid var(--grey-2);
+    padding: 36px 40px;
+    margin-bottom: 48px;
+  }
+  .comparison-block h3 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .comparison-block .sub {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--grey-1);
+    margin-bottom: 28px;
+  }
+  .comp-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 80px 60px;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--grey-3);
+  }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-name {
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .comp-track {
+    height: 14px;
+    background: var(--grey-3);
+    position: relative;
+  }
+  .comp-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--ink);
+  }
+  .comp-fill.tax-haven { background: var(--accent); }
+  .comp-fill.transparent { background: var(--success); }
+  .comp-count {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    text-align: right;
+    font-weight: 600;
+  }
+  .comp-flags {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--grey-1);
+    text-align: right;
+  }
+
+  /* Notable owners table */
+  .table-section {
+    background: var(--paper);
+    border: 1px solid var(--grey-2);
+    margin-bottom: 32px;
+  }
+  .table-section .section-head {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--grey-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .table-section h3 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .table-section .table-meta {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    color: var(--grey-1);
+  }
+  .table-section .data-table th {
+    padding: 14px 24px;
+  }
+  .table-section .data-table td {
+    padding: 16px 24px;
+  }
+  .table-section .jurisdiction {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--grey-1);
+  }
+
+  /* Recent transfers callout */
+  .recent-block {
+    background: var(--paper-warm);
+    border: 1px solid var(--grey-2);
+    padding: 36px 40px;
+    margin-bottom: 48px;
+  }
+  .recent-block h3 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .recent-card {
+    background: var(--paper);
+    border-left: 3px solid var(--accent);
+    padding: 18px 24px;
+    margin-bottom: 14px;
+  }
+  .recent-card:last-child { margin-bottom: 0; }
+  .recent-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .recent-card .date {
+    font-family: var(--font-sans);
+    font-size: var(--t-meta);
+    color: var(--grey-1);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .recent-card .title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .recent-card .detail {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--grey-1);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 900px) {
+    .country-grid { grid-template-columns: 1fr; }
+    .kpi-headline { grid-template-columns: 1fr; gap: 24px; padding: 28px; }
+    .kpi-headline .item .val { font-size: 36px; }
+    .comp-row { grid-template-columns: 1fr 60px; }
+    .comp-track, .comp-flags { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="lede-block">
+  <div class="kicker">Foreign Ownership Analysis</div>
+  <h1 class="headline" style="margin-top: 14px;">
+    {{ district.foreign_pct }}% of corporate property in <em>{{ district.name }}</em> is owned through overseas-incorporated entities.
+  </h1>
+  <p class="standfirst">
+    {{ district.foreign_titles|format_number }} of {{ district.corporate_titles|format_number }} corporate-held titles registered to companies incorporated outside the United Kingdom, spanning {{ district.country_count }} jurisdictions.
+  </p>
+  <div class="meta">
+    <span class="updated">Data as of {{ data_as_of|format_date }}</span>
+    <span>·</span>
+    <span>HMLR OCOD + Companies House</span>
+    <span>·</span>
+    <span>Methodology · Export · Cite</span>
+  </div>
+</div>
+
+<div class="kpi-headline">
+  <div class="item">
+    <div class="label">Overseas-incorporated titles</div>
+    <div class="val accent">{{ district.foreign_titles|format_number }}</div>
+    <div class="sub">{{ district.foreign_pct }}% of corporate-held property in {{ district.name }}</div>
+  </div>
+  <div class="item">
+    <div class="label">Tax-haven jurisdictions</div>
+    <div class="val">{{ district.tax_haven_titles|format_number }}</div>
+    <div class="sub">titles held via BVI, Cayman, Jersey, Guernsey, Isle of Man, Panama</div>
+  </div>
+  <div class="item">
+    <div class="label">Beneficial owner disclosed</div>
+    <div class="val">{{ district.bo_disclosed_pct }}%</div>
+    <div class="sub">via UK Register of Overseas Entities · {{ district.bo_undisclosed_titles|format_number }} titles still without UBO</div>
+  </div>
+</div>
+
+<section style="padding-top: 0;">
+  <div class="section-label">01 · Country breakdown</div>
+  <h2 class="section-title" style="margin-top: 12px;">Where the money is incorporated.</h2>
+  <p class="section-intro">Top jurisdictions of incorporation for overseas-held property in {{ district.name }}, with risk flags applied. Tax-haven and sanctions-listed jurisdictions highlighted.</p>
+
+  <div class="country-grid" style="margin-top: 36px;">
+    {% for country in top_countries[:4] %}
+    <div class="country-card{% if country.risk == 'high' %} danger{% elif country.risk == 'medium' %} warning{% endif %}">
+      <div class="rank">#{{ loop.index }}</div>
+      <div class="country-name">
+        {{ country.name }}
+        {% for flag in country.flags %}
+        <span class="flag-tag {{ flag.style }}">{{ flag.label }}</span>
+        {% endfor %}
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Titles</div>
+          <div class="val">{{ country.title_count|format_number }}</div>
+        </div>
+        <div class="stat">
+          <div class="label">% of overseas</div>
+          <div class="val">{{ "%.1f"|format(country.pct_of_foreign) }}%</div>
+        </div>
+        <div class="stat">
+          <div class="label">UBO disclosed</div>
+          <div class="val">{{ country.bo_disclosed_pct }}%</div>
+        </div>
+        <div class="stat">
+          <div class="label">Distinct entities</div>
+          <div class="val">{{ country.entity_count }}</div>
+        </div>
+      </div>
+      {% if country.narrative %}
+      <p class="narrative">{{ country.narrative }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="comparison-block">
+    <h3>All jurisdictions ranked</h3>
+    <div class="sub">All {{ top_countries|length }} jurisdictions with at least one title in {{ district.name }}.</div>
+    {% for country in top_countries %}
+    <div class="comp-row">
+      <div class="comp-name">{{ country.name }}</div>
+      <div class="comp-track">
+        <div class="comp-fill {% if country.is_tax_haven %}tax-haven{% elif country.is_transparent %}transparent{% endif %}" style="width: {{ country.bar_pct }}%;"></div>
+      </div>
+      <div class="comp-count">{{ country.title_count|format_number }}</div>
+      <div class="comp-flags">
+        {% if country.is_tax_haven %}TAX HAVEN{% elif country.is_sanctions %}SANCTIONS{% else %}—{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <div class="section-label">02 · Notable overseas owners</div>
+  <h2 class="section-title" style="margin-top: 12px;">Who they are, where they're registered.</h2>
+  <p class="section-intro">Top 25 overseas-incorporated entities owning property in {{ district.name }}, ordered by title count. Beneficial owner trace available where the entity has filed under the UK Register of Overseas Entities.</p>
+
+  <div class="table-section" style="margin-top: 36px;">
+    <div class="section-head">
+      <div>
+        <h3>Notable overseas owners</h3>
+        <div class="table-meta">25 entities · sorted by title count · {{ district.name }} only</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-ghost">Export CSV</button>
+        <button class="btn">View on map</button>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Entity</th>
+          <th>Jurisdiction</th>
+          <th class="num">Titles</th>
+          <th>UBO disclosed</th>
+          <th>Risk flags</th>
+          <th>Trace</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for owner in notable_owners %}
+        <tr>
+          <td>
+            <div class="entity-name">{{ owner.name }}</div>
+            <div class="entity-sub">{{ owner.registration_id|default('No CRN') }} · {{ owner.address_summary|default('Unregistered address') }}</div>
+          </td>
+          <td>
+            <span class="jurisdiction">{{ owner.jurisdiction }}</span>
+          </td>
+          <td class="num">{{ owner.title_count }}</td>
+          <td>
+            {% if owner.ubo_disclosed %}
+            <span class="tag accent">Disclosed</span>
+            {% else %}
+            <span class="tag warn">Undisclosed</span>
+            {% endif %}
+          </td>
+          <td>
+            {% for flag in owner.flags %}
+            <span class="tag {{ flag.style }}">{{ flag.label }}</span>
+            {% endfor %}
+          </td>
+          <td>
+            <a href="/dashboard/ownership/estate/{{ owner.slug }}" class="btn btn-ghost" style="padding: 4px 10px; font-size: 11px;">Open profile →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">03 · Recent transfers</div>
+  <h2 class="section-title" style="margin-top: 12px;">Property crossing borders.</h2>
+  <p class="section-intro">Title transfers in {{ district.name }} where one party is overseas-incorporated, last 90 days. Often a leading indicator of beneficial-owner change or jurisdiction restructure.</p>
+
+  <div class="recent-block" style="margin-top: 36px;">
+    <h3>Last 90 days · {{ recent_transfers|length }} transfers</h3>
+    {% for tr in recent_transfers %}
+    <div class="recent-card">
+      <div class="head">
+        <div class="title">{{ tr.title_address }}</div>
+        <div class="date">{{ tr.date|format_date }}</div>
+      </div>
+      <div class="detail">
+        <strong>From:</strong> {{ tr.from_party }} ({{ tr.from_jurisdiction }})<br>
+        <strong>To:</strong> {{ tr.to_party }} ({{ tr.to_jurisdiction }})<br>
+        {{ tr.note }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <div class="section-label">04 · Methodology</div>
+  <h2 class="section-title" style="margin-top: 12px;">How "foreign ownership" is defined.</h2>
+  <div class="disclosure" style="margin-top: 36px;">
+    <p><strong>Definition.</strong> A title is classified as foreign-owned where its proprietor entity is incorporated outside the United Kingdom, as recorded in HMLR's OCOD register or Companies House overseas company filings. UK-incorporated subsidiaries of foreign parents are <em>not</em> classified as foreign for this view, even where the ultimate beneficial owner sits offshore — that view is on the <a href="/dashboard/ownership/beneficial-trace">Beneficial Ownership Trace</a> page.</p>
+    <p><strong>Tax-haven flagging.</strong> Plottr applies the EU non-cooperative jurisdictions list and the OECD Common Reporting Standard non-participants list, supplemented by the Tax Justice Network Financial Secrecy Index top quartile. The label is descriptive, not pejorative — many legitimate businesses incorporate in these jurisdictions for non-tax reasons.</p>
+    <p><strong>UBO data.</strong> Where shown as "disclosed", the ultimate beneficial owner has been filed under the UK Register of Overseas Entities (RoE), introduced August 2022. Many older overseas holdings have not yet filed; those are shown as undisclosed pending filing.</p>
+    <p><strong>Onward use.</strong> This view is provided for analytical and journalistic purposes under HMLR's Use Agreement and may not be redistributed as raw data, used for direct marketing to proprietors, or relied upon for legal due diligence. Source attributions and methodology must accompany any republication.</p>
+  </div>
+</section>
+
+{% endblock %}

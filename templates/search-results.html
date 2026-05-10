@@ -1,0 +1,446 @@
+{% extends "_layout.html" %}
+
+{% block title %}Search: {{ q }}{% endblock %}
+{% block description %}Search results for "{{ q }}" — companies, persons, addresses, and titles in the Plottr ownership graph.{% endblock %}
+{% block tier_label %}Search · <strong>{{ tier|default('Pro') }}</strong>{% endblock %}
+{% block bread_current %}Results for "{{ q }}"{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* Search results — three-section layout, editorial direction */
+  .search-header {
+    padding: 56px 0 32px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .search-header h1 {
+    font-size: 44px;
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    margin-bottom: 12px;
+  }
+  .search-header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .search-header .summary {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--grey-1);
+    margin-bottom: 24px;
+  }
+  .search-header .summary strong {
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-weight: 600;
+  }
+
+  /* Type tabs */
+  .type-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--grey-3);
+    margin-top: 8px;
+    overflow-x: auto;
+  }
+  .type-tab {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 12px 18px;
+    color: var(--grey-1);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+  }
+  .type-tab:hover { color: var(--ink); }
+  .type-tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  .type-tab .count {
+    color: var(--grey-1);
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .type-tab.active .count { color: var(--grey-1); }
+
+  /* Result section */
+  .result-section {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--grey-2);
+  }
+  .result-section:last-of-type { border-bottom: none; }
+  .result-section .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 28px;
+  }
+  .result-section h2 {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .result-section .section-meta {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--grey-1);
+  }
+  .result-section .see-all {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: 16px;
+  }
+  .result-section .see-all:hover { text-decoration: underline; }
+
+  /* Result cards */
+  .result-list {
+    display: grid;
+    gap: 1px;
+    background: var(--grey-2);
+    border: 1px solid var(--grey-2);
+  }
+  .result-card {
+    background: var(--paper);
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: start;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.1s;
+  }
+  .result-card:hover { background: var(--paper-warm); }
+  .result-card.gated { position: relative; }
+  .result-card.gated::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, transparent 0%, transparent 60%, rgba(250,250,247,0.92) 100%);
+    pointer-events: none;
+  }
+  .result-card .name {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+  .result-card .name em { color: var(--accent); font-style: normal; background: var(--accent-soft); padding: 0 2px; }
+  .result-card .meta {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--grey-1);
+    line-height: 1.5;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .result-card .meta .sep { color: var(--grey-2); }
+  .result-card .stats {
+    text-align: right;
+    font-family: var(--font-sans);
+  }
+  .result-card .stats .big {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.0;
+  }
+  .result-card .stats .big.accent { color: var(--accent); }
+  .result-card .stats .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--grey-1);
+    margin-top: 4px;
+  }
+
+  /* Tag overrides for result cards */
+  .result-card .tag-row { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+
+  /* Upgrade prompt — when free tier user clicks gated result */
+  .tier-gate-card {
+    background: var(--paper-cool);
+    border: 1px dashed var(--grey-2);
+    padding: 28px 32px;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  .tier-gate-card .text {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .tier-gate-card .text strong { color: var(--accent); }
+
+  /* Empty state */
+  .empty-state {
+    padding: 80px 40px;
+    text-align: center;
+    color: var(--grey-1);
+  }
+  .empty-state .icon {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    opacity: 0.4;
+    margin-bottom: 16px;
+  }
+  .empty-state h3 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .empty-state p {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Search tips */
+  .search-tips {
+    background: var(--paper-cool);
+    border-left: 3px solid var(--ink);
+    padding: 20px 28px;
+    margin-top: 32px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--grey-1);
+    line-height: 1.6;
+  }
+  .search-tips strong { color: var(--ink); }
+  .search-tips code {
+    font-family: var(--font-mono);
+    background: var(--paper);
+    padding: 1px 6px;
+    border: 1px solid var(--grey-3);
+    border-radius: 2px;
+    font-size: 12px;
+  }
+
+  @media (max-width: 700px) {
+    .result-card {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .result-card .stats {
+      text-align: left;
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+    }
+    .result-card .stats .big { font-size: 18px; }
+    .search-header h1 { font-size: 28px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="search-header">
+  <div class="kicker">Search Results</div>
+  <h1 style="margin-top: 12px;">Results for <em>"{{ q }}"</em></h1>
+  <p class="summary">
+    <strong>{{ counts.total|format_number }}</strong> results across
+    {% if counts.companies %}<strong>{{ counts.companies|format_number }}</strong> companies{% endif %}{% if counts.persons %}{% if counts.companies %}, {% endif %}<strong>{{ counts.persons|format_number }}</strong> persons{% endif %}{% if counts.addresses %}{% if counts.companies or counts.persons %}, {% endif %}<strong>{{ counts.addresses|format_number }}</strong> addresses{% endif %}{% if counts.titles %}{% if counts.companies or counts.persons or counts.addresses %}, {% endif %}<strong>{{ counts.titles|format_number }}</strong> titles{% endif %}.
+  </p>
+
+  <div class="type-tabs">
+    <a href="?q={{ q|urlencode }}" class="type-tab {% if active_type == 'all' %}active{% endif %}">All <span class="count">{{ counts.total|format_number }}</span></a>
+    <a href="?q={{ q|urlencode }}&type=company" class="type-tab {% if active_type == 'company' %}active{% endif %}">Companies <span class="count">{{ counts.companies|format_number }}</span></a>
+    <a href="?q={{ q|urlencode }}&type=person" class="type-tab {% if active_type == 'person' %}active{% endif %}">Persons <span class="count">{{ counts.persons|format_number }}</span></a>
+    {% if counts.addresses %}<a href="?q={{ q|urlencode }}&type=address" class="type-tab {% if active_type == 'address' %}active{% endif %}">Addresses <span class="count">{{ counts.addresses|format_number }}</span></a>{% endif %}
+    {% if counts.titles %}<a href="?q={{ q|urlencode }}&type=title" class="type-tab {% if active_type == 'title' %}active{% endif %}">Titles <span class="count">{{ counts.titles|format_number }}</span></a>{% endif %}
+  </div>
+</div>
+
+{% if counts.total == 0 %}
+
+<div class="empty-state">
+  <div class="icon">∅</div>
+  <h3>Nothing found for "{{ q }}"</h3>
+  <p>No companies, persons, addresses, or titles match your query in the Plottr ownership graph.</p>
+</div>
+<div class="search-tips">
+  <strong>Search tips:</strong> Try a fuller name (e.g. <code>Grosvenor Estate Limited</code>), a postcode (<code>SW1X 0NU</code>), or a title number (<code>NGL713492</code>). Plottr matches on company names, person names, postcodes, and HMLR title numbers. Soft hyphens and unicode dashes are normalised automatically.
+</div>
+
+{% else %}
+
+{# Companies section — always shown if results exist #}
+{% if (active_type in ['all', 'company']) and results.companies %}
+<section class="result-section">
+  <div class="section-head">
+    <h2>Companies</h2>
+    <div class="section-meta">
+      Top {{ results.companies|length }} of {{ counts.companies|format_number }}
+      {% if active_type == 'all' and counts.companies > results.companies|length %}
+      <a href="?q={{ q|urlencode }}&type=company" class="see-all">See all companies →</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="result-list">
+    {% for r in results.companies %}
+    <a href="{{ r.url }}" class="result-card{% if r.gated %} gated{% endif %}">
+      <div>
+        <div class="name">{{ r.name|highlight(q)|safe }}</div>
+        <div class="meta">
+          <span>CH {{ r.id }}</span>
+          {% if r.status %}<span class="sep">·</span><span>{{ r.status|title }}</span>{% endif %}
+          {% if r.incorporated %}<span class="sep">·</span><span>Incorporated {{ r.incorporated|format_date }}</span>{% endif %}
+          {% if r.reg_postcode %}<span class="sep">·</span><span>{{ r.reg_postcode }}{% if r.reg_town %}, {{ r.reg_town }}{% endif %}</span>{% endif %}
+        </div>
+        <div class="tag-row">
+          {% if r.category %}<span class="tag muted">{{ r.category }}</span>{% endif %}
+          {% if r.title_count and r.title_count > 50 %}<span class="tag accent">Major landowner</span>{% endif %}
+          {% if r.foreign %}<span class="tag warn">Overseas</span>{% endif %}
+        </div>
+      </div>
+      <div class="stats">
+        <div class="big {% if r.title_count > 50 %}accent{% endif %}">{{ r.title_count|format_number }}</div>
+        <div class="label">{% if r.title_count == 1 %}title held{% else %}titles held{% endif %}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# Persons section #}
+{% if (active_type in ['all', 'person']) and results.persons %}
+<section class="result-section">
+  <div class="section-head">
+    <h2>Persons</h2>
+    <div class="section-meta">
+      Top {{ results.persons|length }} of {{ counts.persons|format_number }}
+      {% if active_type == 'all' and counts.persons > results.persons|length %}
+      <a href="?q={{ q|urlencode }}&type=person" class="see-all">See all persons →</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="result-list">
+    {% for r in results.persons %}
+    <a href="{{ r.url }}" class="result-card{% if r.gated %} gated{% endif %}">
+      <div>
+        <div class="name">{{ r.name|highlight(q)|safe }}</div>
+        <div class="meta">
+          {% if r.dob_year %}<span>Born {{ r.dob_year }}</span>{% endif %}
+          {% if r.country %}<span class="sep">·</span><span>Resident in {{ r.country }}</span>{% endif %}
+          {% if r.nationality %}<span class="sep">·</span><span>{{ r.nationality }}</span>{% endif %}
+        </div>
+        <div class="tag-row">
+          {% if r.controlled_count > 5 %}<span class="tag accent">Controls multiple companies</span>{% endif %}
+          {% if r.sample_companies %}<span class="tag muted">{{ r.sample_companies|join(', ') }}{% if r.controlled_count > 3 %} + {{ r.controlled_count - 3 }} more{% endif %}</span>{% endif %}
+        </div>
+      </div>
+      <div class="stats">
+        <div class="big {% if r.controlled_count > 5 %}accent{% endif %}">{{ r.controlled_count|format_number }}</div>
+        <div class="label">{% if r.controlled_count == 1 %}company controlled{% else %}companies controlled{% endif %}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# Addresses section #}
+{% if (active_type in ['all', 'address']) and results.addresses %}
+<section class="result-section">
+  <div class="section-head">
+    <h2>Addresses</h2>
+    <div class="section-meta">
+      Top {{ results.addresses|length }} of {{ counts.addresses|format_number }}
+      {% if active_type == 'all' and counts.addresses > results.addresses|length %}
+      <a href="?q={{ q|urlencode }}&type=address" class="see-all">See all addresses →</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="result-list">
+    {% for r in results.addresses %}
+    <a href="{{ r.url }}" class="result-card{% if r.gated %} gated{% endif %}">
+      <div>
+        <div class="name">{{ r.premises or r.postcode }}</div>
+        <div class="meta">
+          <span>{{ r.postcode }}</span>
+          {% if r.town %}<span class="sep">·</span><span>{{ r.town }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="stats">
+        <div class="big">{{ r.reg_count|format_number }}</div>
+        <div class="label">registered companies</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# Titles section #}
+{% if (active_type in ['all', 'title']) and results.titles %}
+<section class="result-section">
+  <div class="section-head">
+    <h2>Titles</h2>
+    <div class="section-meta">
+      Top {{ results.titles|length }} of {{ counts.titles|format_number }}
+      {% if active_type == 'all' and counts.titles > results.titles|length %}
+      <a href="?q={{ q|urlencode }}&type=title" class="see-all">See all titles →</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="result-list">
+    {% for r in results.titles %}
+    <a href="{{ r.url }}" class="result-card{% if r.gated %} gated{% endif %}">
+      <div>
+        <div class="name">{{ r.address or r.id }}</div>
+        <div class="meta">
+          <span>Title {{ r.id }}</span>
+          {% if r.postcode %}<span class="sep">·</span><span>{{ r.postcode }}</span>{% endif %}
+          {% if r.tenure %}<span class="sep">·</span><span>{{ r.tenure|title }}</span>{% endif %}
+        </div>
+        <div class="tag-row">
+          <span class="tag muted">{{ r.source }}</span>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="big">→</div>
+        <div class="label">view title</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# Tier upsell — if user is on free/limited tier and there are more results gated #}
+{% if tier_upsell %}
+<div class="tier-gate-card">
+  <div class="text">
+    Plottr's free tier shows <strong>top 3 results per type</strong>. {{ counts.total - 9 }} more results are available on Pro and above — including beneficial owner traces, full ownership history, and unlimited searches.
+  </div>
+  <a href="/pricing" class="btn btn-primary">View pricing →</a>
+</div>
+{% endif %}
+
+{% endif %}
+
+<div class="disclosure" style="margin: 60px 0;">
+  <p><strong>Search scope.</strong> Plottr's search covers UK companies registered at Companies House, persons of significant control declared in PSC filings, registered office addresses, and HMLR title numbers from CCOD and OCOD. Results draw on data current as of {{ data_as_of|format_date }}.</p>
+  <p><strong>Privacy.</strong> Person records show only year of birth (not month/day) per Companies House privacy rules. Residential addresses for persons are never displayed. Where a person appears in search results, only their public PSC declarations are shown.</p>
+</div>
+
+{% endblock %}
