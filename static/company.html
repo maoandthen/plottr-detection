@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Profile · Tenure by Plottr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0f0f0d;--paper:#f5f2eb;--warm:#ede9df;--rule:#d4cfc4;--navy:#1a2c4a;--gold:#b8972a;--red:#b52d1e;--amber:#c97b12;--green:#2a5c3f}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+.topbar{height:46px;border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:var(--paper);position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);text-decoration:none}
+.logo em{font-style:italic;color:var(--navy)}
+.topbar-nav{display:flex;gap:1.5rem;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase}
+.topbar-nav a{color:#888;text-decoration:none;transition:color 0.12s}
+.topbar-nav a:hover{color:var(--ink)}
+
+.breadcrumb{padding:0.6rem 1.5rem;border-bottom:1px solid var(--rule);background:var(--warm);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;color:#888;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap}
+.breadcrumb a{color:#888;text-decoration:none}.breadcrumb a:hover{color:var(--ink)}
+.bc-sep{opacity:0.4}
+
+.hero{padding:2.5rem 1.5rem 2rem;border-bottom:2px solid var(--ink);max-width:1000px;margin:0 auto}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap}
+.status-pill{padding:0.15rem 0.5rem;font-size:0.55rem;letter-spacing:0.1em;border:1px solid currentColor}
+.sp-active{color:var(--green)}
+.sp-dissolved{color:var(--red)}
+.sp-admin{color:var(--amber)}
+.sp-other{color:#888}
+.hero-name{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.6rem);font-weight:400;letter-spacing:-0.02em;line-height:1.15;margin-bottom:0.6rem}
+.hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;color:#888;margin-bottom:1.2rem}
+.flags{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.flag{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border:1px solid currentColor}
+.fl-high{color:var(--red)}.fl-med{color:var(--amber)}.fl-clean{color:var(--green)}
+.cta-row{display:flex;gap:0.5rem;flex-wrap:wrap}
+.cta{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.5rem 0.9rem;border:1px solid;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.15s}
+.cta-primary{border-color:var(--navy);color:var(--navy)}
+.cta-primary:hover{background:var(--navy);color:white}
+.cta-ghost{border-color:var(--rule);color:#888}
+.cta-ghost:hover{border-color:var(--ink);color:var(--ink)}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);margin:2rem 1.5rem 0;max-width:1000px}
+.kpi{padding:1.2rem 1.5rem;border-right:1px solid var(--rule)}
+.kpi:last-child{border-right:none}
+.kpi-val{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:400;display:block;line-height:1;margin-bottom:0.3rem}
+.kpi-lbl{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:#888}
+
+.layout{max-width:1000px;margin:2rem auto 4rem;padding:0 1.5rem;display:grid;grid-template-columns:1fr 300px;gap:2rem}
+
+.sec{margin-bottom:2rem}
+.sec-head{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;padding-bottom:0.5rem;border-bottom:1px solid var(--rule);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.sec-count{color:var(--ink);font-size:0.7rem}
+
+/* PSC list */
+.psc-card{padding:0.8rem;border:1px solid var(--rule);margin-bottom:0.5rem;cursor:pointer;transition:background 0.1s;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.psc-card:hover{background:var(--warm)}
+.psc-name{font-size:0.88rem;font-weight:500;margin-bottom:0.2rem}
+.psc-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:#888;letter-spacing:0.04em;line-height:1.5}
+.psc-arrow{font-family:'DM Mono',monospace;font-size:0.65rem;color:#888;flex-shrink:0;margin-top:0.2rem}
+
+/* Siblings */
+.sib-row{display:flex;align-items:center;justify-content:space-between;padding:0.55rem 0;border-bottom:1px solid rgba(212,207,196,0.5);cursor:pointer;transition:background 0.1s;gap:1rem}
+.sib-row:hover{background:var(--warm);margin:0 -0.5rem;padding:0.55rem 0.5rem}
+.sib-row:last-child{border-bottom:none}
+.sib-name{font-size:0.82rem;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sib-crn{font-family:'DM Mono',monospace;font-size:0.58rem;color:#888}
+.sib-count{font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);flex-shrink:0}
+
+/* Postcodes */
+.pc-cloud{display:flex;flex-wrap:wrap;gap:0.4rem}
+.pc-tag{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.04em;padding:0.2rem 0.5rem;background:var(--warm);border:1px solid var(--rule);cursor:pointer;transition:all 0.1s;text-decoration:none;color:var(--ink)}
+.pc-tag:hover{background:var(--navy);color:white;border-color:var(--navy)}
+
+/* Sidebar */
+.sidebar-card{border:1px solid var(--rule);padding:1.2rem;margin-bottom:1rem}
+.sc-head{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#888;margin-bottom:0.8rem}
+.sc-row{display:flex;justify-content:space-between;align-items:baseline;padding:0.35rem 0;border-bottom:1px solid rgba(212,207,196,0.4);font-size:0.78rem}
+.sc-row:last-child{border-bottom:none}
+.sc-key{color:#666}.sc-val{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--ink);text-align:right;max-width:55%}
+
+.loading{padding:3rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:#888}
+.loading::after{content:'…';animation:dots 1.2s infinite}
+@keyframes dots{0%{content:'…'}33%{content:'.'}66%{content:'..'}100%{content:'…'}}
+
+@media(max-width:700px){
+.layout{grid-template-columns:1fr}
+.sidebar{order:-1}
+.kpi-strip{grid-template-columns:repeat(2,1fr)}
+.kpi:nth-child(2){border-right:none}
+.kpi:nth-child(3){border-top:1px solid var(--rule)}
+.kpi:nth-child(4){border-top:1px solid var(--rule);border-right:none}
+.topbar-nav{display:none}
+}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+ <a class="logo" href="/search">ten<em>ure</em></a>
+ <nav class="topbar-nav">
+ <a href="/search">Search</a>
+ <a href="/map?area=SW1X">Map</a>
+ </nav>
+ <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#888">HMLR · CH · Live</span>
+</div>
+
+<div class="breadcrumb" id="breadcrumb">
+ <a href="/search">Search</a>
+ <span class="bc-sep">›</span>
+ <span id="bc-name">Company profile</span>
+</div>
+
+<div id="page-content">
+ <div class="loading">Loading company profile</div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const crn = params.get('crn');
+
+if (!crn) {
+ document.getElementById('page-content').innerHTML = `<div style="max-width:900px;margin:3rem auto;padding:0 1.5rem;text-align:center">
+ <h2 style="font-family:'Playfair Display',serif;margin-bottom:0.5rem">No company specified</h2>
+ <p><a href="/search" style="color:var(--navy)">← Back to search</a></p></div>`;
+} else {
+ loadCompany(crn);
+}
+
+async function loadCompany(crn) {
+ try {
+ const r = await fetch(`/api/company/${encodeURIComponent(crn)}`);
+ const d = await r.json();
+ if (d.error) throw new Error(d.error);
+ render(d);
+ } catch(e) {
+ document.getElementById('page-content').innerHTML = `<div style="max-width:900px;margin:3rem auto;padding:0 1.5rem;text-align:center">
+ <h2 style="font-family:'Playfair Display',serif;margin-bottom:0.5rem">Profile unavailable</h2>
+ <p style="color:#888">${e.message}</p>
+ <p style="margin-top:1rem"><a href="/search" style="color:var(--navy)">← Back to search</a></p></div>`;
+ }
+}
+
+function statusPillClass(s) {
+ if (!s) return 'sp-other';
+ if (s === 'Active') return 'sp-active';
+ if (/Dissolved|Liquidation/.test(s)) return 'sp-dissolved';
+ if (/Admin/.test(s)) return 'sp-admin';
+ return 'sp-other';
+}
+
+function render(d) {
+ document.title = `${d.name} · Tenure`;
+ document.getElementById('bc-name').textContent = d.name;
+
+ const postcodes = d.postcodes || [];
+ const districts = d.districts || [];
+
+ const flagsHtml = d.flags && d.flags.length
+ ? d.flags.map(f => `<span class="flag fl-${f.level==='high'?'high':'med'}">${f.label}</span>`).join('')
+ : `<span class="flag fl-clean">No flags · Clean</span>`;
+
+ const pscsHtml = (d.pscs || []).length
+ ? (d.pscs || []).map(p => `
+ <div class="psc-card" onclick="window.location='/person?id=${p.person_id}&name=${encodeURIComponent(p.name)}'">
+ <div>
+ <div class="psc-name">${p.name}</div>
+ <div class="psc-meta">
+ Born ${p.dob_year || '—'} · ${p.nationality || '—'} · Resident: ${p.country_of_residence || '—'}<br>
+ Control: ${(p.nature_of_control || '').split('-').slice(0,4).join(' · ') || '—'}<br>
+ ${p.notified_on ? 'PSC since: ' + p.notified_on : ''}
+ </div>
+ </div>
+ <div class="psc-arrow">View profile →</div>
+ </div>`).join('')
+ : `<div style="color:#888;font-size:0.85rem;padding:0.5rem 0">No PSC persons found in register</div>`;
+
+ const sibsHtml = (d.siblings || []).length
+ ? (d.siblings || []).map(s => `
+ <div class="sib-row" onclick="window.location='/company?crn=${s.crn}'">
+ <div>
+ <div class="sib-name">${s.name}</div>
+ <div class="sib-crn">CH ${s.crn} · ${s.status || '—'}</div>
+ </div>
+ <div class="sib-count">${s.title_count} →</div>
+ </div>`).join('')
+ : `<div style="color:#888;font-size:0.85rem;padding:0.5rem 0">No linked companies found via shared PSC</div>`;
+
+ const postcodesHtml = postcodes.map(pc =>
+ `<a class="pc-tag" href="/map?area=${pc}">${pc}</a>`).join('');
+
+ document.getElementById('page-content').innerHTML = `
+ <div class="hero">
+ <div class="hero-kicker">
+ <span class="status-pill ${statusPillClass(d.status)}">${d.status || 'Unknown'}</span>
+ ${d.category || 'Company'} · Companies House
+ </div><h1 class="hero-name">${d.name}</h1>
+ <div class="hero-meta">
+ <span>CH ${d.crn}</span>
+ ${d.incorporated ? `<span>Incorporated ${d.incorporated}</span>` : ''}
+ ${d.address_postcode ? `<span>Reg. office: ${d.address_postcode}</span>` : ''}
+ ${districts.length ? `<span>${districts.slice(0,3).join(' · ')}</span>` : ''}
+ </div>
+ <div class="flags">${flagsHtml}</div>
+ <div class="cta-row">
+ <a class="cta cta-primary" href="/map?area=${postcodes[0]||'SW1X'}">View on map →</a>
+ <a class="cta cta-ghost" onclick="history.back()">← Back</a>
+ <a class="cta cta-ghost" href="/search">Search</a>
+ </div>
+ </div>
+
+ <div class="kpi-strip">
+ <div class="kpi">
+ <span class="kpi-val" style="color:var(--navy)">${(d.title_count||0).toLocaleString()}</span>
+ <span class="kpi-lbl">Titles held</span>
+ </div>
+ <div class="kpi">
+ <span class="kpi-val">${(d.pscs||[]).length}</span>
+ <span class="kpi-lbl">PSC persons</span>
+ </div>
+ <div class="kpi">
+ <span class="kpi-val">${(d.siblings||[]).length}</span>
+ <span class="kpi-lbl">Linked companies</span>
+ </div>
+ <div class="kpi">
+ <span class="kpi-val" style="color:${d.risk_level==='high'?'var(--red)':d.risk_level==='medium'?'var(--amber)':'var(--green)'}">${(d.risk_level||'clean').toUpperCase()}</span>
+ <span class="kpi-lbl">Risk level</span>
+ </div>
+ </div>
+
+ <div class="layout">
+ <div>
+ <div class="sec">
+ <div class="sec-head">Persons of significant control <span class="sec-count">${(d.pscs||[]).length}</span></div>
+ ${pscsHtml}
+ </div>
+
+ <div class="sec">
+ <div class="sec-head">Linked companies via shared PSC <span class="sec-count">${(d.siblings||[]).length}</span></div>
+ ${sibsHtml}
+ </div>
+
+ ${postcodes.length ? `
+ <div class="sec">
+ <div class="sec-head">Geographic presence · click to explore map</div>
+ <div class="pc-cloud">${postcodesHtml}</div>
+ </div>` : ''}
+ </div>
+
+ <div class="sidebar">
+ <div class="sidebar-card">
+ <div class="sc-head">Company details</div>
+ ${[
+ ['CRN', d.crn],
+ ['Status', d.status || '—'],
+ ['Category', d.category || '—'],
+ ['Incorporated', d.incorporated || '—'],
+ ['Reg. postcode', d.address_postcode || '—'],
+ ['SIC', (d.sic || '—').slice(0,40)],
+ ['Districts', (d.districts||[]).slice(0,3).join(', ') || '—'],
+ ].map(([k,v]) => `<div class="sc-row"><span class="sc-key">${k}</span><span class="sc-val">${v}</span></div>`).join('')}
+ </div>
+
+ <div class="sidebar-card">
+ <div class="sc-head">Risk flags</div>
+ ${(d.flags||[]).length
+ ? (d.flags||[]).map(f => `<div class="sc-row"><span class="sc-key">${f.code}</span><span class="sc-val" style="color:${f.level==='high'?'var(--red)':'var(--amber)'}">${f.label}</span></div>`).join('')
+ : `<div style="font-size:0.78rem;color:var(--green);padding:0.3rem 0">No flags · Clean</div>`}
+ </div>
+
+ <div class="sidebar-card">
+ <div class="sc-head">Data sources</div>
+ <p style="font-size:0.75rem;color:#666;line-height:1.55">Company data from Companies House bulk product. Title holdings from HMLR CCOD/OCOD. PSC declarations from Companies House PSC register. Updated monthly.</p>
+ </div>
+ </div>
+ </div>`;
+}
+</script>
+
+</body>
+</html>

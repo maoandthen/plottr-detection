@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenure · UK Ownership Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --ink:#0f0f0d;--paper:#f5f2eb;--warm:#ede9df;--rule:#d4cfc4;
+ --navy:#1a2c4a;--gold:#b8972a;--red:#b52d1e;--amber:#c97b12;--green:#2a5c3f;
+}
+html,body{height:100%;background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:46px;border-bottom:1px solid var(--rule)}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);text-decoration:none;letter-spacing:-0.01em}
+.logo em{font-style:italic;color:var(--navy)}
+.topbar-nav{display:flex;gap:1.5rem;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase}
+.topbar-nav a{color:#888;text-decoration:none;transition:color 0.12s}
+.topbar-nav a:hover{color:var(--ink)}
+.live-badge{display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:rgba(245,242,235,0.3)}
+.dot{width:5px;height:5px;border-radius:50%;background:#5dd464;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── HERO ── */
+.hero{padding:5rem 1.5rem 3rem;text-align:center;max-width:680px;margin:0 auto}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:#aaa;margin-bottom:1.2rem}
+.hero-hed{font-family:'Playfair Display',serif;font-size:clamp(2rem,6vw,3.2rem);font-weight:400;line-height:1.12;letter-spacing:-0.025em;margin-bottom:1rem;color:var(--ink)}
+.hero-hed em{font-style:italic;color:var(--navy)}
+.hero-sub{font-size:0.9rem;color:#777;font-weight:300;line-height:1.65;max-width:480px;margin:0 auto 2.5rem}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;max-width:560px;margin:0 auto}
+.search-field{width:100%;background:white;border:1px solid var(--rule);padding:1rem 5rem 1rem 1.2rem;font-family:'DM Sans',sans-serif;font-size:1rem;color:var(--ink);outline:none;transition:border-color 0.15s;-webkit-appearance:none}
+.search-field:focus{border-color:var(--navy)}
+.search-field::placeholder{color:#bbb}
+.search-go{position:absolute;right:0;top:0;bottom:0;background:var(--navy);border:none;padding:0 1.2rem;color:var(--paper);font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:opacity 0.12s}
+.search-go:hover{opacity:0.85}
+
+/* Type pills */
+.type-pills{display:flex;gap:0.4rem;justify-content:center;margin-top:0.8rem;flex-wrap:wrap}
+.pill{background:none;border:1px solid var(--rule);color:#888;font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;cursor:pointer;transition:all 0.12s}
+.pill:hover,.pill.on{border-color:var(--navy);color:var(--navy)}
+.pill.on{background:rgba(26,44,74,0.05)}
+
+/* ── EXAMPLES ── */
+.examples{text-align:center;margin-top:1.5rem}
+.eg-label{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#aaa;margin-bottom:0.6rem}
+.eg-chips{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap}
+.chip{background:none;border:none;color:#888;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.04em;cursor:pointer;padding:0.2rem 0.5rem;border-bottom:1px solid var(--rule);transition:color 0.1s}
+.chip:hover{color:var(--ink);border-bottom-color:var(--navy)}
+
+/* ── RESULTS ── */
+.results-wrap{max-width:720px;margin:2rem auto 0;padding:0 1.5rem 3rem}
+.results-hidden{display:none}
+
+.results-meta{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;color:#888;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between}
+
+/* Section header */
+.sec-head{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#aaa;padding-bottom:0.5rem;border-bottom:1px solid var(--rule);margin-bottom:0.6rem;margin-top:1.5rem}
+.sec-head:first-child{margin-top:0}
+
+/* Result card */
+.result{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:0.8rem 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background 0.1s}
+.result:hover{background:var(--warm);margin:0 -0.8rem;padding:0.8rem 0.8rem}
+.result:last-child{border-bottom:none}
+.result-left{flex:1;min-width:0}
+.result-name{font-size:0.9rem;font-weight:500;color:var(--ink);margin-bottom:0.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-name mark{background:#fff3b0;color:#7a5500;font-style:normal}
+.result-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:#888;letter-spacing:0.04em;display:flex;gap:0.8rem;flex-wrap:wrap}
+.result-right{flex-shrink:0;text-align:right}
+.result-count{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--navy);display:block;line-height:1}
+.result-count-lbl{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;color:#aaa}
+.result-arrow{font-family:'DM Mono',monospace;font-size:0.65rem;color:#aaa;margin-top:0.3rem}
+
+/* Type badges */
+.tbadge{display:inline-block;font-family:'DM Mono',monospace;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.1rem 0.35rem;border:1px solid currentColor;margin-right:0.3rem;vertical-align:middle}
+.t-co{color:#888}
+.t-person{color:#7b9dc7}
+.t-postcode{color:var(--green)}
+.t-os{color:var(--gold)}
+.t-flag{color:var(--red)}
+
+/* Area card (postcode results) */
+.area-card{background:var(--warm);border:1px solid var(--rule);padding:1rem 1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background 0.1s;margin-bottom:0.4rem}
+.area-card:hover{background:#e5e0d5}
+.area-code{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:400;color:var(--ink);margin-bottom:0.2rem}
+.area-meta{font-family:'DM Mono',monospace;font-size:0.62rem;color:#888;letter-spacing:0.04em}
+.area-cta{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--gold);letter-spacing:0.06em}
+
+/* Loading */
+.spinner{display:none;text-align:center;padding:2rem;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:#aaa}
+
+/* Stats footer */
+.stats-footer{border-top:1px solid var(--rule);margin-top:4rem;padding:2rem 1.5rem;display:grid;grid-template-columns:repeat(4,1fr);gap:0;max-width:720px;margin-left:auto;margin-right:auto}
+.sf-item{padding:1rem;border-right:1px solid var(--rule);text-align:center}
+.sf-item:last-child{border-right:none}
+.sf-val{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:400;display:block;margin-bottom:0.2rem;color:var(--ink)}
+.sf-lbl{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#bbb}
+
+/* Empty state */
+.empty{text-align:center;padding:3rem 1rem}
+.empty-icon{font-family:'Playfair Display',serif;font-size:2rem;color:rgba(245,242,235,0.1);margin-bottom:0.8rem}
+.empty-txt{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,242,235,0.2)}
+.empty-hint{font-size:0.8rem;color:rgba(245,242,235,0.2);margin-top:0.5rem;font-weight:300}
+
+/* Mobile */
+@media(max-width:600px){
+.hero{padding:3rem 1rem 2rem}
+.topbar-nav{display:none}
+.stats-footer{grid-template-columns:repeat(2,1fr)}
+.sf-item:nth-child(2){border-right:none}
+.sf-item:nth-child(3){border-top:1px solid rgba(245,242,235,0.07)}
+.sf-item:nth-child(4){border-top:1px solid rgba(245,242,235,0.07);border-right:none}
+.results-wrap{padding:0 1rem 2rem}
+.result-right{display:none}
+}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+ <a class="logo" href="/">ten<em>ure</em></a>
+ <nav class="topbar-nav">
+ <a href="/map?area=SW1X">Map</a>
+ <a href="/concentration?area=SW1X">Concentration</a>
+ <a href="#">Foreign ownership</a>
+ <a href="#">Person network</a>
+ </nav>
+ <div class="live-badge"><span class="dot"></span> HMLR · CH · Live</div>
+</div>
+
+<div class="hero">
+ <p class="hero-kicker">UK Ownership Intelligence · Tenure by Plottr</p>
+ <h1 class="hero-hed">Who owns<br><em>the land.</em></h1>
+ <p class="hero-sub">Search 5.7M companies, 9.5M persons of significant control, and 4.5M registered titles. Follow the thread wherever it leads.</p>
+
+ <div class="search-wrap">
+ <input class="search-field" id="q" type="text" placeholder="Company, person, postcode, CRN, title number…" autocomplete="off" autocorrect="off" spellcheck="false">
+ <button class="search-go" onclick="doSearch()">Search →</button>
+ </div>
+
+ <div class="type-pills">
+ <button class="pill on" data-type="all" onclick="setType('all',this)">All</button>
+ <button class="pill" data-type="company" onclick="setType('company',this)">Companies</button>
+ <button class="pill" data-type="person" onclick="setType('person',this)">Persons (PSC)</button>
+ <button class="pill" data-type="postcode" onclick="setType('postcode',this)">Postcodes</button>
+ </div>
+
+ <div class="examples">
+ <div class="eg-label">Try searching</div>
+ <div class="eg-chips">
+ <button class="chip" onclick="setQ('Cadogan')">Cadogan</button>
+ <button class="chip" onclick="setQ('SW1X')">SW1X</button>
+ <button class="chip" onclick="setQ('grosvenor')">Grosvenor</button>
+ <button class="chip" onclick="setQ('nominees')">Nominees</button>
+ <button class="chip" onclick="setQ('BVI')">BVI</button>
+ <button class="chip" onclick="setQ('cayman')">Cayman</button>
+ <button class="chip" onclick="setQ('trust')">Trust</button>
+ <button class="chip" onclick="setQ('W1K')">W1K</button>
+ </div>
+ </div>
+</div>
+
+<!-- RESULTS -->
+
+<div class="results-wrap results-hidden" id="results-wrap">
+ <div class="spinner" id="spinner">Searching ownership graph…</div>
+ <div id="results-inner"></div>
+</div>
+
+<!-- STATS FOOTER (hidden when results showing) -->
+
+<div class="stats-footer" id="stats-footer">
+ <div class="sf-item"><span class="sf-val">5.7M</span><span class="sf-lbl">Companies indexed</span></div>
+ <div class="sf-item"><span class="sf-val">9.5M</span><span class="sf-lbl">PSC persons</span></div>
+ <div class="sf-item"><span class="sf-val">4.5M</span><span class="sf-lbl">HMLR titles</span></div>
+ <div class="sf-item"><span class="sf-val">7.4M</span><span class="sf-lbl">Ownership edges</span></div>
+</div>
+
+<script>
+let searchType = 'all';
+let debounceTimer;
+
+function setType(t, el) {
+ searchType = t;
+ document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
+ el.classList.add('on');
+ const q = document.getElementById('q').value.trim();
+ if (q.length >= 2) doSearch();
+}
+
+function setQ(q) {
+ document.getElementById('q').value = q;
+ doSearch();
+}
+
+function isPostcodeLike(q) {
+ return /^[A-Z]{1,2}\d/.test(q.toUpperCase().trim());
+}
+
+function isCRNLike(q) {
+ return /^\d{8}$/.test(q.trim()) || /^OC\d{6}$/.test(q.trim().toUpperCase());
+}
+
+async function doSearch() {
+ const q = document.getElementById('q').value.trim();
+ if (q.length < 2) return;
+
+ document.getElementById('results-wrap').classList.remove('results-hidden');
+ document.getElementById('stats-footer').style.display = 'none';
+ document.getElementById('spinner').style.display = 'block';
+ document.getElementById('results-inner').innerHTML = '';
+
+ const results = { companies: [], persons: [], areas: [] };
+ const qUp = q.toUpperCase();
+ const qNorm = q.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+
+ try {
+ // Detect postcode-like input → area search
+ if ((searchType === 'all' || searchType === 'postcode') && isPostcodeLike(q)) {
+ results.areas.push({ code: qUp, label: 'Postcode area · ' + qUp, type: 'postcode' });
+ }
+
+ // Detect CRN → direct company lookup
+ if (isCRNLike(q)) {
+ const r = await fetch(`/api/company/${encodeURIComponent(q.trim())}`);
+ if (r.ok) {
+ const d = await r.json();
+ if (d.name) results.companies.push({ ...d, match_type: 'crn' });
+ }
+ }
+
+ // Company name search
+ if (searchType === 'all' || searchType === 'company') {
+ const r = await fetch(`/api/search/companies?q=${encodeURIComponent(qNorm)}&limit=8`);
+ if (r.ok) {
+ const d = await r.json();
+ results.companies.push(...(d.results || []));
+ }
+ }
+
+ // Person name search
+ if (searchType === 'all' || searchType === 'person') {
+ const r = await fetch(`/api/search/persons?q=${encodeURIComponent(qNorm)}&limit=6`);
+ if (r.ok) {
+ const d = await r.json();
+ results.persons.push(...(d.results || []));
+ }
+ }
+
+ } catch(e) {
+ console.error('Search error:', e);
+ }
+
+ document.getElementById('spinner').style.display = 'none';
+ renderResults(q, results);
+}
+
+function renderResults(q, results) {
+ const total = results.companies.length + results.persons.length + results.areas.length;
+ let html = '';
+
+ if (total === 0) {
+ html = `<div class="empty">
+ <div class="empty-icon">∅</div>
+ <div class="empty-txt">No results for "${q}"</div>
+ <div class="empty-hint">Try a fuller name, postcode prefix (SW1X), or company number</div>
+ </div>`;
+ document.getElementById('results-inner').innerHTML = html;
+ return;
+ }
+
+ html += `<div class="results-meta"><span>${total} result${total!==1?'s':''} for "<strong style="color:rgba(245,242,235,0.7)">${q}</strong>"</span><span style="color:rgba(245,242,235,0.2)">${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} · Live graph</span></div>`;
+
+ // Areas
+ if (results.areas.length) {
+ html += `<div class="sec-head">Postcode area</div>`;
+ results.areas.forEach(a => {
+ html += `<div class="area-card" onclick="window.location='/map?area=${a.code}'">
+ <div>
+ <div class="area-code">${a.code}</div>
+ <div class="area-meta">View corporate concentration map · Top owners · Heat analysis</div>
+ </div>
+ <div class="area-cta">Explore area →</div>
+ </div>`;
+ });
+ }
+
+ // Companies
+ if (results.companies.length) {
+ html += `<div class="sec-head">Companies (${results.companies.length})</div>`;
+ results.companies.forEach(c => {
+ const flags = [];
+ if (c.flags) c.flags.forEach(f => flags.push(`<span class="tbadge t-flag">${f.label}</span>`));
+ const statusCol = c.status === 'Active' ? 'rgba(93,212,100,0.7)' : c.status?.includes('Liquid') || c.status?.includes('Dissolved') ? 'rgba(181,45,30,0.7)' : 'rgba(245,242,235,0.2)';
+ const hl = highlightMatch(c.name || '', q);
+ html += `<div class="result" onclick="openCompany('${c.crn}','${(c.name||'').replace(/'/g,"\\'")}')">
+ <div class="result-left">
+ <div class="result-name"><span class="tbadge t-co">Co.</span>${hl}</div>
+ <div class="result-meta">
+ <span>CH ${c.crn || '—'}</span>
+ <span style="color:${statusCol}">${c.status || '—'}</span>
+ ${c.incorporated ? '<span>Inc. '+c.incorporated+'</span>' : ''}
+ ${flags.join('')}
+ </div>
+ </div>
+ <div class="result-right">
+ <span class="result-count">${(c.title_count||0).toLocaleString()}</span>
+ <span class="result-count-lbl">titles held</span>
+ <div class="result-arrow">→</div>
+ </div>
+ </div>`;
+ });
+ }
+
+ // Persons
+ if (results.persons.length) {
+ html += `<div class="sec-head">Persons of significant control (${results.persons.length})</div>`;
+ results.persons.forEach(p => {
+ const hl = highlightMatch(p.name || '', q);
+ html += `<div class="result" onclick="openPerson('${p.person_id}','${(p.name||'').replace(/'/g,"\\'")}')">
+ <div class="result-left">
+ <div class="result-name"><span class="tbadge t-person">PSC</span>${hl}</div>
+ <div class="result-meta">
+ <span>${p.nationality || '—'}</span>
+ ${p.dob_year ? '<span>Born '+p.dob_year+'</span>' : ''}
+ ${p.country_of_residence ? '<span>Resident: '+p.country_of_residence+'</span>' : ''}
+ </div>
+ </div>
+ <div class="result-right">
+ <span class="result-count">${(p.companies_controlled||0)}</span>
+ <span class="result-count-lbl">companies</span>
+ <div class="result-arrow">→</div>
+ </div>
+ </div>`;
+ });
+ }
+
+ document.getElementById('results-inner').innerHTML = html;
+}
+
+function highlightMatch(name, q) {
+ if (!q || !name) return name;
+ const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+ return name.replace(re, '<mark>$1</mark>');
+}
+
+function openCompany(crn, name) {
+ window.location = `/company?crn=${encodeURIComponent(crn)}`;
+}
+
+function openPerson(personId, name) {
+ window.location = `/person?id=${encodeURIComponent(personId)}&name=${encodeURIComponent(name)}`;
+}
+
+// ── DEBOUNCED LIVE SEARCH ──
+document.getElementById('q').addEventListener('input', e => {
+ clearTimeout(debounceTimer);
+ const q = e.target.value.trim();
+ if (q.length < 2) {
+ document.getElementById('results-wrap').classList.add('results-hidden');
+ document.getElementById('stats-footer').style.display = '';
+ return;
+ }
+ debounceTimer = setTimeout(doSearch, 350);
+});
+
+document.getElementById('q').addEventListener('keydown', e => {
+ if (e.key === 'Enter') { clearTimeout(debounceTimer); doSearch(); }
+});
+</script>
+
+</body>
+</html>

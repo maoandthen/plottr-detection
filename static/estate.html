@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estate Profile · Tenure by Plottr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0f0f0d;--paper:#f5f2eb;--warm:#ede9df;--rule:#d4cfc4;--navy:#1a2c4a;--gold:#b8972a;--red:#b52d1e;--amber:#c97b12;--green:#2a5c3f}
+body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* TOPBAR */
+.topbar{height:46px;border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:var(--paper);position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);text-decoration:none}
+.logo em{font-style:italic;color:var(--navy)}
+.tnav{display:flex;gap:1.5rem;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase}
+.tnav a{color:#888;text-decoration:none;transition:color 0.12s}.tnav a:hover{color:var(--ink)}
+
+/* BREADCRUMB */
+.bc{padding:0.6rem 1.5rem;border-bottom:1px solid var(--rule);background:var(--warm);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;color:#888;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap}
+.bc a{color:#888;text-decoration:none}.bc a:hover{color:var(--ink)}
+.bc-sep{opacity:0.4}
+
+/* HERO */
+.hero{padding:2.5rem 1.5rem 2rem;border-bottom:2px solid var(--ink)}
+.hero-inner{max-width:1000px;margin:0 auto}
+.hero-tag{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.8rem}
+.tier-tag{background:var(--navy);color:white;padding:0.15rem 0.5rem;font-size:0.55rem;letter-spacing:0.1em}
+.hero-name{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:400;letter-spacing:-0.02em;line-height:1.15;margin-bottom:0.5rem}
+.hero-sub{font-size:0.85rem;color:#777;margin-bottom:1.2rem;font-weight:300;max-width:600px}
+.hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;color:#888;margin-bottom:1.2rem}
+
+/* FLAGS */
+.flags{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.flag{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border:1px solid currentColor}
+.fl-high{color:var(--red)}.fl-med{color:var(--amber)}.fl-clean{color:var(--green)}
+
+/* CTA ROW */
+.cta-row{display:flex;gap:0.5rem;flex-wrap:wrap}
+.cta{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.5rem 0.9rem;border:1px solid;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.15s}
+.cta-p{border-color:var(--navy);color:var(--navy)}.cta-p:hover{background:var(--navy);color:white}
+.cta-g{border-color:var(--rule);color:#888}.cta-g:hover{border-color:var(--ink);color:var(--ink)}
+
+/* KPI STRIP */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule);max-width:1000px;margin:1.5rem auto 0}
+.kpi{padding:1.1rem 1.3rem;border-right:1px solid var(--rule)}
+.kpi:last-child{border-right:none}
+.kpi-val{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:400;display:block;line-height:1;margin-bottom:0.3rem}
+.kpi-lbl{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#888}
+
+/* LAYOUT */
+.layout{max-width:1000px;margin:2rem auto 4rem;padding:0 1.5rem;display:grid;grid-template-columns:1fr 300px;gap:2rem}
+
+/* SECTION */
+.sec{margin-bottom:2rem}
+.sec-head{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;padding-bottom:0.5rem;border-bottom:1px solid var(--rule);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.sec-n{color:var(--ink);font-size:0.7rem}
+
+/* CORPORATE TREE */
+.tree{font-family:'DM Mono',monospace;font-size:0.8rem;line-height:1.9;color:#444}
+.tree-node{display:flex;align-items:baseline;gap:0.6rem;padding:0.2rem 0;cursor:pointer;transition:color 0.1s;border-radius:2px}
+.tree-node:hover{color:var(--navy)}
+.tree-prefix{color:#bbb;flex-shrink:0;user-select:none}
+.tree-name{font-weight:500;color:var(--ink)}
+.tree-node:hover .tree-name{color:var(--navy)}
+.tree-crn{font-size:0.65rem;color:#aaa;font-weight:300}
+.tree-titles{font-family:'Playfair Display',serif;font-size:0.9rem;color:var(--navy);margin-left:auto;flex-shrink:0}
+.tree-status{font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.1rem 0.3rem;border:1px solid currentColor}
+.ts-active{color:var(--green)}.ts-dissolved{color:var(--red)}.ts-admin{color:var(--amber)}.ts-foreign{color:var(--gold)}
+
+/* CONCENTRATION BARS */
+.conc-item{display:flex;align-items:center;gap:0.8rem;padding:0.5rem 0;border-bottom:1px solid rgba(212,207,196,0.4)}
+.conc-item:last-child{border-bottom:none}
+.conc-label{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.04em;min-width:80px;color:#555}
+.conc-bar-wrap{flex:1;height:5px;background:var(--rule)}
+.conc-bar{height:100%;background:var(--navy);transition:width 0.6s}
+.conc-count{font-family:'Playfair Display',serif;font-size:0.9rem;color:var(--navy);min-width:35px;text-align:right}
+
+/* PSC TRACE */
+.trace-step{display:flex;align-items:flex-start;gap:0.8rem;margin-bottom:0.8rem;position:relative}
+.trace-step::before{content:'';position:absolute;left:15px;top:32px;bottom:-8px;width:1px;background:var(--rule)}
+.trace-step:last-child::before{display:none}
+.trace-dot{width:30px;height:30px;border-radius:50%;border:2px solid var(--rule);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.55rem;color:#888;flex-shrink:0;background:var(--paper);letter-spacing:0.05em}
+.trace-dot.active{border-color:var(--navy);color:var(--navy)}
+.trace-dot.ubo{border-color:var(--gold);background:var(--gold);color:white}
+.trace-body{flex:1;padding-top:0.3rem}
+.trace-level{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;color:#aaa;margin-bottom:0.15rem}
+.trace-name{font-size:0.88rem;font-weight:500;color:var(--ink);margin-bottom:0.15rem;cursor:pointer;transition:color 0.1s}
+.trace-name:hover{color:var(--navy)}
+.trace-detail{font-family:'DM Mono',monospace;font-size:0.6rem;color:#888;letter-spacing:0.04em}
+.trace-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.1rem 0.35rem;border:1px solid currentColor;margin-left:0.4rem;vertical-align:middle}
+.tt-pep{color:var(--amber)}.tt-trust{color:var(--navy)}.tt-os{color:var(--gold)}
+
+/* SIDEBAR */
+.sc{border:1px solid var(--rule);padding:1.2rem;margin-bottom:1rem}
+.sc-head{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#888;margin-bottom:0.8rem}
+.sc-row{display:flex;justify-content:space-between;align-items:baseline;padding:0.35rem 0;border-bottom:1px solid rgba(212,207,196,0.4);font-size:0.78rem}
+.sc-row:last-child{border-bottom:none}
+.sc-k{color:#666}.sc-v{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ink);text-align:right;max-width:55%}
+
+/* LOADING / ERROR */
+.loading{padding:4rem 1.5rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:#888}
+.loading::after{content:'…';animation:d 1.2s infinite}
+@keyframes d{0%{content:'…'}33%{content:'.'}66%{content:'..'}100%{content:'…'}}
+.err{max-width:900px;margin:4rem auto;padding:0 1.5rem;text-align:center}
+.err h2{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:0.5rem}
+.err p{color:#888;font-size:0.85rem;margin-bottom:1rem}
+
+@media(max-width:700px){
+.layout{grid-template-columns:1fr}.sidebar{order:-1}
+.kpis{grid-template-columns:repeat(2,1fr)}
+.kpi:nth-child(2){border-right:none}
+.kpi:nth-child(3),.kpi:nth-child(4),.kpi:nth-child(5){border-top:1px solid var(--rule)}
+.kpi:nth-child(4){border-right:none}
+.tnav{display:none}
+}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+ <a class="logo" href="/search">ten<em>ure</em></a>
+ <nav class="tnav">
+ <a href="/search">Search</a>
+ <a href="/map?area=SW1X">Map</a>
+ <a href="/concentration?area=SW1X">Concentration</a>
+ </nav>
+ <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#888">ENTERPRISE · HMLR + CH · Live</span>
+</div>
+
+<div class="bc" id="bc">
+ <a href="/search">Search</a>
+ <span class="bc-sep">›</span>
+ <span id="bc-name">Estate profile</span>
+</div>
+
+<div id="page"><div class="loading">Loading estate profile</div></div>
+
+<script>
+const p = new URLSearchParams(window.location.search);
+const crn = p.get('crn');
+if (!crn) {
+ document.getElementById('page').innerHTML = `<div class="err"><h2>No company specified</h2><p>Return to <a href="/search">search</a> to find an estate.</p></div>`;
+} else { load(crn); }
+
+async function load(crn) {
+ try {
+ const [estR, concR] = await Promise.all([
+ fetch(`/api/estate/${encodeURIComponent(crn)}`),
+ fetch(`/api/estate/${encodeURIComponent(crn)}/concentration`)
+ ]);
+ const est = await estR.json();
+ if (est.error) throw new Error(est.error);
+ const conc = concR.ok ? await concR.json() : {};
+ render(est, conc);
+ } catch(e) {
+ document.getElementById('page').innerHTML = `<div class="err"><h2>Profile unavailable</h2><p>${e.message}</p><p><a href="/search" class="cta cta-p">← Back to search</a></p></div>`;
+ }
+}
+
+function stClass(s) {
+ if (!s) return 'ts-other';
+ if (s==='Active') return 'ts-active';
+ if (/Dissolved|Liquidation/.test(s)) return 'ts-dissolved';
+ if (/Admin/.test(s)) return 'ts-admin';
+ if (s==='Foreign') return 'ts-foreign';
+ return '';
+}
+
+function render(d, conc) {
+ document.title = `${d.name} · Estate Profile · Tenure`;
+ document.getElementById('bc-name').textContent = d.name;
+
+ const flagsHtml = (d.flags||[]).length
+ ? (d.flags||[]).map(f=>`<span class="flag fl-${f.level==='high'?'high':'med'}">${f.label}</span>`).join('')
+ : `<span class="flag fl-clean">No flags · Clean</span>`;
+
+ // Corporate tree
+ const allEntities = [d, ...(d.siblings||[])];
+ const maxT = Math.max(...allEntities.map(e=>e.title_count||0), 1);
+ const prefixes = ['└─',' ├─',' ├─',' ├─',' └─',' ├─',' └─'];
+ const treeHtml = allEntities.map((e,i) => {
+ const prefix = i===0 ? '◆' : (i===allEntities.length-1?'└─':'├─');
+ const indent = i===0 ? '' : 'padding-left:1.2rem;';
+ return `<div class="tree-node" style="${indent}" onclick="window.location='/company?crn=${e.crn||''}'" title="Open company profile">
+ <span class="tree-prefix">${prefix}</span>
+ <span class="tree-name">${e.name}</span>
+ <span class="tree-crn">${e.crn?'CH '+e.crn:''}</span>
+ ${e.status?`<span class="tree-status ${stClass(e.status)}">${e.status}</span>`:''}
+ <span class="tree-titles">${(e.title_count||0)} →</span>
+ </div>`;
+ }).join('');
+
+ // Concentration bars
+ const postcodes = conc.postcodes || [];
+ const maxConc = postcodes.length ? postcodes[0].count : 1;
+ const concHtml = postcodes.slice(0,8).map(pc=>`
+ <div class="conc-item">
+ <span class="conc-label">${pc.postcode}</span>
+ <div class="conc-bar-wrap"><div class="conc-bar" style="width:${Math.round(pc.count/maxConc*100)}%"></div></div>
+ <span class="conc-count">${pc.count}</span>
+ </div>`).join('') || '<div style="color:#888;font-size:0.82rem;padding:0.5rem 0">Geographic data loading…</div>';
+
+ // PSC trace
+ const pscs = d.pscs || [];
+ const traceSteps = [
+ {level:'L0 · COMPANY', name:d.name, detail:`CH ${d.crn} · ${d.status||'—'}`, dot:'L0', tag:null, onclick:`window.location='/company?crn=${d.crn}'`},
+ ...pscs.slice(0,4).map((p,i)=>({
+ level:`L${i+1} · ${i===pscs.length-1?'ULTIMATE BENEFICIAL OWNER':'PERSON OF SIGNIFICANT CONTROL'}`,
+ name: p.name,
+ detail: `Born ${p.dob_year||'—'} · ${p.nationality||'—'} · ${(p.nature_of_control||'').split('-').slice(0,2).join(' ')}`,
+ dot: i===pscs.length-1?'UBO':`L${i+1}`,
+ isUbo: i===pscs.length-1,
+ tag: i===pscs.length-1?'declared':null,
+ onclick:`window.location='/person?id=${p.person_id}&name=${encodeURIComponent(p.name)}'`
+ }))
+ ];
+
+ const traceHtml = traceSteps.map(s=>`
+ <div class="trace-step">
+ <div class="trace-dot ${s.isUbo?'ubo':s.level.includes('L0')?'active':''}">${s.dot}</div>
+ <div class="trace-body">
+ <div class="trace-level">${s.level}</div>
+ <div class="trace-name" onclick="${s.onclick}">${s.name}${s.tag?`<span class="trace-tag tt-pep">${s.tag}</span>`:''}</div>
+ <div class="trace-detail">${s.detail}</div>
+ </div>
+ </div>`).join('');
+
+ document.getElementById('page').innerHTML = `
+ <div class="hero">
+ <div class="hero-inner">
+ <div class="hero-tag">
+ <span class="tier-tag">Enterprise</span>
+ Estate Profile · Full holding structure
+ </div>
+ <h1 class="hero-name">${d.name}</h1>
+ <p class="hero-sub">${(d.title_count||0).toLocaleString()} registered titles across ${allEntities.length} holding ${allEntities.length===1?'entity':'entities'}. Data from HMLR and Companies House.</p>
+ <div class="hero-meta">
+ <span>CH ${d.crn}</span>
+ ${d.status?`<span>${d.status}</span>`:''}
+ ${d.incorporated?`<span>Inc. ${d.incorporated}</span>`:''}
+ ${d.address_postcode?`<span>Reg. ${d.address_postcode}</span>`:''}
+ </div>
+ <div class="flags">${flagsHtml}</div>
+ <div class="cta-row">
+ <a class="cta cta-p" href="/map?area=${(d.postcodes||[])[0]||'SW1X'}">View on map →</a>
+ <a class="cta cta-g" href="/concentration?area=${(d.postcodes||[])[0]||'SW1X'}">Area concentration</a>
+ <a class="cta cta-g" onclick="history.back()">← Back</a>
+ </div>
+ </div>
+ </div>
+
+ <div style="max-width:1000px;margin:0 auto;padding:0 1.5rem">
+ <div class="kpis">
+ <div class="kpi"><span class="kpi-val" style="color:var(--navy)">${(d.title_count||0).toLocaleString()}</span><span class="kpi-lbl">Total titles</span></div>
+ <div class="kpi"><span class="kpi-val">${allEntities.length}</span><span class="kpi-lbl">Holding entities</span></div>
+ <div class="kpi"><span class="kpi-val">${(d.pscs||[]).length}</span><span class="kpi-lbl">PSC persons</span></div>
+ <div class="kpi"><span class="kpi-val" style="color:${d.risk_level==='high'?'var(--red)':d.risk_level==='medium'?'var(--amber)':'var(--green)'}">${(d.risk_level||'CLEAN').toUpperCase()}</span><span class="kpi-lbl">Risk level</span></div>
+ <div class="kpi"><span class="kpi-val">${(conc.postcodes||[]).length}</span><span class="kpi-lbl">Postcode areas</span></div>
+ </div>
+ </div>
+
+ <div class="layout">
+ <div>
+ <div class="sec">
+ <div class="sec-head">Corporate structure <span class="sec-n">${allEntities.length} entities</span></div>
+ <div class="tree">${treeHtml}</div>
+ <p style="margin-top:0.8rem;font-size:0.75rem;color:#aaa;font-family:'DM Mono',monospace">Click any entity to open company profile. Linked companies shown via shared PSC declarations.</p>
+ </div>
+
+ <div class="sec">
+ <div class="sec-head">Geographic concentration</div>
+ ${concHtml}
+ </div>
+
+ <div class="sec">
+ <div class="sec-head">Beneficial ownership trace</div>
+ ${pscs.length ? traceHtml : `<div style="color:#888;font-size:0.85rem;padding:0.5rem 0">No PSC persons found in Companies House register for this entity.</div>`}
+ </div>
+ </div>
+
+ <div class="sidebar">
+ <div class="sc">
+ <div class="sc-head">Company details</div>
+ ${[
+ ['CRN', d.crn],
+ ['Status', d.status||'—'],
+ ['Category', d.category||'—'],
+ ['Incorporated', d.incorporated||'—'],
+ ['Reg. postcode', d.address_postcode||'—'],
+ ['SIC', (d.sic||'—').slice(0,40)],
+ ['Linked entities', allEntities.length],
+ ].map(([k,v])=>`<div class="sc-row"><span class="sc-k">${k}</span><span class="sc-v">${v}</span></div>`).join('')}
+ </div>
+
+ <div class="sc">
+ <div class="sc-head">Risk flags</div>
+ ${(d.flags||[]).length
+ ? (d.flags||[]).map(f=>`<div class="sc-row"><span class="sc-k">${f.code}</span><span class="sc-v" style="color:${f.level==='high'?'var(--red)':'var(--amber)'}">${f.label}</span></div>`).join('')
+ : `<div style="font-size:0.78rem;color:var(--green);padding:0.3rem 0">No flags · Clean</div>`}
+ </div>
+
+ <div class="sc">
+ <div class="sc-head">PSC persons (${(d.pscs||[]).length})</div>
+ ${(d.pscs||[]).slice(0,5).map(p=>`
+ <div class="sc-row" style="cursor:pointer;flex-direction:column;align-items:flex-start;gap:0.1rem" onclick="window.location='/person?id=${p.person_id}&name=${encodeURIComponent(p.name)}'">
+ <span style="font-size:0.8rem;font-weight:500;color:var(--ink)">${p.name}</span>
+ <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#888">Born ${p.dob_year||'—'} · ${p.nationality||'—'}</span>
+ </div>`).join('') || `<div style="font-size:0.78rem;color:#888;padding:0.3rem 0">No PSC data found</div>`}
+ </div>
+
+ <div class="sc">
+ <div class="sc-head">Data sources</div>
+ <p style="font-size:0.75rem;color:#666;line-height:1.55">Title holdings from HMLR CCOD/OCOD. Corporate structure from Companies House PSC register. Updated monthly from primary sources.</p>
+ <p style="font-size:0.72rem;color:#aaa;margin-top:0.5rem;font-family:'DM Mono',monospace">Not for legal due diligence. See plottr.co.uk/terms.</p>
+ </div>
+ </div>
+ </div>`;
+}
+</script>
+
+</body>
+</html>

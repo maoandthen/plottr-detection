@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Person Profile · Tenure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --ink:#0f0f0d;--paper:#f5f2eb;--warm:#ede9df;--rule:#d4cfc4;
+ --navy:#1a2c4a;--gold:#b8972a;--red:#b52d1e;--amber:#c97b12;--green:#2a5c3f;
+}
+html,body{height:100%;background:var(--ink);color:var(--paper);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:46px;border-bottom:1px solid rgba(245,242,235,0.08)}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--paper);text-decoration:none;letter-spacing:-0.01em}
+.logo em{font-style:italic;color:var(--gold)}
+.live-badge{display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:rgba(245,242,235,0.3)}
+.dot{width:5px;height:5px;border-radius:50%;background:#5dd464;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── HERO ── */
+.hero{padding:3rem 1.5rem 2rem;text-align:center;max-width:800px;margin:0 auto}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(245,242,235,0.3);margin-bottom:1rem}
+.psc-tag{background:rgba(123,157,199,0.15);border:1px solid rgba(123,157,199,0.3);color:#7b9dc7;padding:0.15rem 0.5rem;margin-right:0.5rem;font-size:0.55rem}
+.hero-name{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,5vw,2.5rem);font-weight:400;line-height:1.2;letter-spacing:-0.02em;margin-bottom:1rem}
+.hero-meta{font-size:0.85rem;color:rgba(245,242,235,0.45);display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
+.flags{display:flex;gap:0.5rem;justify-content:center;margin-bottom:2rem}
+.flag{background:rgba(181,45,30,0.15);border:1px solid rgba(181,45,30,0.3);color:var(--red);padding:0.2rem 0.6rem;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.05em;text-transform:uppercase}
+.cta-row{display:flex;gap:1rem;justify-content:center}
+.cta{padding:0.8rem 1.5rem;text-decoration:none;font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.12s}
+.cta-primary{background:var(--gold);color:var(--ink)}
+.cta-primary:hover{opacity:0.85}
+.cta-ghost{border:1px solid rgba(245,242,235,0.2);color:rgba(245,242,235,0.6)}
+.cta-ghost:hover{border-color:rgba(245,242,235,0.4);color:rgba(245,242,235,0.9)}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2rem;margin:2rem 1.5rem;padding:2rem;background:rgba(245,242,235,0.02);border:1px solid rgba(245,242,235,0.08)}
+.kpi{text-align:center}
+.kpi-val{display:block;font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:rgba(245,242,235,0.8);line-height:1;margin-bottom:0.3rem}
+.kpi-lbl{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,242,235,0.3)}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:1fr 300px;gap:3rem;max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem}
+.main-col{}
+.sidebar{}
+
+/* ── SECTIONS ── */
+.sec{margin-bottom:3rem}
+.sec-head{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(245,242,235,0.4);padding-bottom:1rem;border-bottom:1px solid rgba(245,242,235,0.1);margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.sec-count{font-size:0.6rem;color:rgba(245,242,235,0.25)}
+
+/* ── COMPANIES TABLE ── */
+.co-table{width:100%;border-collapse:collapse}
+.co-table th{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(245,242,235,0.3);padding:0.8rem 0;border-bottom:1px solid rgba(245,242,235,0.1);text-align:left}
+.co-table td{padding:1rem 0;border-bottom:1px solid rgba(245,242,235,0.05);vertical-align:top}
+.co-name{font-size:0.9rem;font-weight:500;color:var(--paper);margin-bottom:0.3rem;cursor:pointer;transition:color 0.12s}
+.co-name:hover{color:var(--gold)}
+.co-crn{font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(245,242,235,0.3)}
+.co-status{font-size:0.75rem;padding:0.2rem 0.5rem;background:rgba(93,212,100,0.1);color:rgba(93,212,100,0.8)}
+.co-status.dissolved{background:rgba(181,45,30,0.1);color:rgba(181,45,30,0.8)}
+.co-titles{font-family:'Playfair Display',serif;font-size:1.1rem;color:rgba(245,242,235,0.7);text-align:right}
+
+/* ── POSTCODES ── */
+.postcode-cloud{display:flex;gap:0.5rem;flex-wrap:wrap;padding:1rem 0}
+.pc-tag{background:rgba(42,92,63,0.15);border:1px solid rgba(42,92,63,0.3);color:var(--green);padding:0.3rem 0.6rem;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.05em;cursor:pointer;transition:all 0.12s}
+.pc-tag:hover{background:rgba(42,92,63,0.25);border-color:rgba(42,92,63,0.5)}
+
+/* ── SIDEBAR ── */
+.sidebar-card{background:rgba(245,242,235,0.02);border:1px solid rgba(245,242,235,0.08);padding:1.5rem;margin-bottom:2rem}
+.sc-head{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(245,242,235,0.4);margin-bottom:1rem;padding-bottom:0.8rem;border-bottom:1px solid rgba(245,242,235,0.1)}
+.sc-stat{display:flex;justify-content:space-between;align-items:start;padding:0.6rem 0;border-bottom:1px solid rgba(245,242,235,0.05)}
+.sc-stat:last-child{border-bottom:none}
+.sc-label{font-size:0.75rem;color:rgba(245,242,235,0.5);font-family:'DM Mono',monospace;letter-spacing:0.02em}
+.sc-val{font-size:0.8rem;color:rgba(245,242,235,0.8);text-align:right;max-width:60%}
+
+/* ── FAMILY CLUSTER ── */
+.family-item{display:flex;align-items:center;justify-content:space-between;padding:0.8rem 0;border-bottom:1px solid rgba(245,242,235,0.05);cursor:pointer;transition:background 0.12s}
+.family-item:hover{background:rgba(245,242,235,0.03);margin:0 -1rem;padding:0.8rem 1rem}
+.family-item:last-child{border-bottom:none}
+.family-name{font-size:0.85rem;color:var(--paper);margin-bottom:0.2rem}
+.family-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(245,242,235,0.3)}
+.family-cos{font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(245,242,235,0.4)}
+
+/* ── LOADING STATE ── */
+.loading{text-align:center;padding:4rem 1rem;color:rgba(245,242,235,0.3);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase}
+
+/* ── ERROR STATE ── */
+.error{text-align:center;padding:4rem 1rem;color:var(--red)}
+.error-title{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:1rem}
+.error-msg{font-size:0.85rem;color:rgba(245,242,235,0.4);margin-bottom:2rem}
+
+/* ── MOBILE ── */
+@media(max-width:900px){
+.layout{grid-template-columns:1fr;gap:2rem}
+.hero-meta{flex-direction:column;gap:0.5rem}
+.kpi-strip{grid-template-columns:repeat(2,1fr);gap:1rem;padding:1.5rem}
+.cta-row{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+ <a class="logo" href="/">ten<em>ure</em></a>
+ <div class="live-badge"><span class="dot"></span> HMLR · CH · Live</div>
+</div>
+
+<div id="page-content">
+ <div class="loading">Loading person profile…</div>
+</div>
+
+<script>
+async function loadPersonProfile() {
+ const params = new URLSearchParams(window.location.search);
+ const personId = params.get('id');
+ const name = params.get('name') || 'Unknown Person';
+
+ if (!personId) {
+ showError('Person ID required', 'Please provide a person_id parameter');
+ return;
+ }
+
+ try {
+ // Fetch person data from API
+ const response = await fetch(`/api/person/${personId}`);
+ if (!response.ok) {
+ throw new Error(`HTTP ${response.status}`);
+ }
+ 
+ const d = await response.json();
+ renderPersonProfile(d);
+ 
+ } catch (error) {
+ console.error('Error loading person:', error);
+ showError('Person not found', 'This person profile could not be loaded. They may not exist in our database.');
+ }
+}
+
+function renderPersonProfile(d) {
+ // Calculate derived stats
+ const totalTitles = (d.companies || []).reduce((sum, c) => sum + (c.title_count || 0), 0);
+ const activeCount = (d.companies || []).filter(c => c.status === 'Active').length;
+ const postcodes = [...new Set((d.companies || []).flatMap(c => c.postcodes || []))].sort();
+ 
+ // Build companies HTML
+ const cosHtml = (d.companies || []).map(c => `
+ <tr>
+ <td>
+ <div class="co-name" onclick="window.location='/api/company/${c.crn}'">${c.name}</div>
+ <div class="co-crn">CH ${c.crn}</div>
+ </td>
+ <td>
+ <span class="co-status ${c.status === 'Active' ? '' : 'dissolved'}">${c.status || '—'}</span>
+ </td>
+ <td class="co-titles">${(c.title_count || 0).toLocaleString()}</td>
+ </tr>`).join('');
+
+ // Build flags HTML
+ const flagsHtml = (d.flags || []).map(f => 
+ `<span class="flag">${f.label}</span>`
+ ).join('');
+
+ // Family cluster
+ const familyHtml = (d.family_cluster || []).length
+ ? (d.family_cluster || []).map(p => `
+ <div class="family-item" onclick="window.location='/person?id=${p.person_id}&name=${encodeURIComponent(p.name)}'">
+ <div>
+ <div class="family-name">${p.name}</div>
+ <div class="family-meta">Born ${p.dob_year || '—'} · ${p.nationality || '—'}</div>
+ </div>
+ <div class="family-cos">${p.companies_controlled || 0} cos →</div>
+ </div>`).join('')
+ : `<div style="font-size:0.78rem;color:#888;padding:0.3rem 0">No other persons found with this surname</div>`;
+
+ // Postcodes
+ const postcodesHtml = postcodes.map(pc =>
+ `<span class="pc-tag" onclick="window.location='/map?area=${pc}'">${pc}</span>`
+ ).join('');
+
+ document.getElementById('page-content').innerHTML = `
+ <div class="hero">
+ <div class="hero-kicker">
+ <span class="psc-tag">PSC</span>
+ Person of Significant Control
+ </div>
+ <h1 class="hero-name">${d.name}</h1>
+ <div class="hero-meta">
+ ${d.dob_year ? `<span>Born ${d.dob_year}</span>` : ''}
+ ${d.nationality ? `<span>${d.nationality}</span>` : ''}
+ ${d.country_of_residence ? `<span>Resident: ${d.country_of_residence}</span>` : ''}
+ <span>Indexed from Companies House PSC register</span>
+ </div>
+ <div class="flags">${flagsHtml}</div>
+ <div class="cta-row">
+ <a class="cta cta-primary" href="/map?area=SW1X">View on ownership map</a>
+ <a class="cta cta-ghost" href="/search">← Back to search</a>
+ </div>
+ </div>
+
+ <div style="max-width:900px;margin:0 auto;padding:0 1.5rem">
+ <div class="kpi-strip">
+ <div class="kpi">
+ <span class="kpi-val" style="color:var(--navy)">${d.companies_controlled || 0}</span>
+ <span class="kpi-lbl">Companies controlled</span>
+ </div>
+ <div class="kpi">
+ <span class="kpi-val">${totalTitles.toLocaleString()}</span>
+ <span class="kpi-lbl">Total titles held</span>
+ </div>
+ <div class="kpi">
+ <span class="kpi-val" style="color:var(--green)">${activeCount}</span>
+ <span class="kpi-lbl">Active companies</span>
+ </div>
+ <div class="kpi">
+ <span class="kpi-val">${postcodes.length}</span>
+ <span class="kpi-lbl">Postcode areas</span>
+ </div>
+ </div>
+ </div>
+
+ <div class="layout">
+ <div class="main-col">
+ <div class="sec">
+ <div class="sec-head">
+ Companies controlled
+ <span class="sec-count">${(d.companies||[]).length} shown</span>
+ </div>
+ ${(d.companies||[]).length ? `
+ <table class="co-table">
+ <thead><tr>
+ <th>Company</th>
+ <th>Status</th>
+ <th style="text-align:right">Titles</th>
+ </tr></thead>
+ <tbody>${cosHtml}</tbody>
+ </table>` : `<div style="color:#888;font-size:0.85rem;padding:1rem 0">No companies found for this person.</div>`}
+ </div>
+
+ ${postcodes.length ? `
+ <div class="sec">
+ <div class="sec-head">Geographic reach · click to explore</div>
+ <div class="postcode-cloud">${postcodesHtml}</div>
+ </div>` : ''}
+ </div>
+
+ <div class="sidebar">
+ <div class="sidebar-card">
+ <div class="sc-head">Person details</div>
+ ${[
+ ['Full name', d.name],
+ ['Birth year', d.dob_year || '—'],
+ ['Nationality', d.nationality || '—'],
+ ['Country of residence', d.country_of_residence || '—'],
+ ['PSC filings', (d.companies_controlled||0) + ' companies'],
+ ['Data source', 'Companies House PSC register'],
+ ].map(([l,v]) => `<div class="sc-stat"><span class="sc-label">${l}</span><span class="sc-val">${v}</span></div>`).join('')}
+ </div>
+
+ <div class="sidebar-card">
+ <div class="sc-head">Surname cluster · ${d.surname || d.name.split(' ').pop() || ''}</div>
+ ${familyHtml}
+ </div>
+ </div>
+ </div>
+ `;
+
+ // Update page title
+ document.title = `${d.name} · Person Profile · Tenure`;
+}
+
+function showError(title, message) {
+ document.getElementById('page-content').innerHTML = `
+ <div class="error">
+ <div class="error-title">${title}</div>
+ <div class="error-msg">${message}</div>
+ <a class="cta cta-ghost" href="/search">← Back to search</a>
+ </div>
+ `;
+}
+
+// Load profile on page load
+document.addEventListener('DOMContentLoaded', loadPersonProfile);
+</script>
+
+</body>
+</html>
