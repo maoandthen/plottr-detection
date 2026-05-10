@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Intelligence · Tenure by Plottr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0f0f0d;--paper:#f5f2eb;--warm:#ede9df;--rule:#d4cfc4;--navy:#1a2c4a;--gold:#b8972a;--red:#b52d1e;--amber:#c97b12;--green:#2a5c3f}
+body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.topbar{height:46px;border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:var(--paper);position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);text-decoration:none}
+.logo em{font-style:italic;color:var(--navy)}
+.tnav{display:flex;gap:1.5rem;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase}
+.tnav a{color:#888;text-decoration:none}.tnav a:hover{color:var(--ink)}
+.bc{padding:0.6rem 1.5rem;border-bottom:1px solid var(--rule);background:var(--warm);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;color:#888;display:flex;align-items:center;gap:0.4rem}
+.bc a{color:#888;text-decoration:none}.bc a:hover{color:var(--ink)}.bc-sep{opacity:0.4}
+
+/* HERO */
+.hero{padding:2.5rem 1.5rem 2rem;border-bottom:2px solid var(--ink);max-width:1000px;margin:0 auto}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:0.6rem}
+.hero-hed{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:400;letter-spacing:-0.02em;line-height:1.15;margin-bottom:0.5rem}
+.hero-sub{font-size:0.85rem;color:#777;font-weight:300;line-height:1.65;max-width:580px}
+
+/* TAB NAV */
+.tab-nav{border-bottom:1px solid var(--rule);padding:0 1.5rem;display:flex;gap:0;max-width:1000px;margin:0 auto}
+.tab{padding:0.7rem 1.2rem;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;color:#888;border-bottom:2px solid transparent;transition:all 0.12s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--navy);border-bottom-color:var(--navy)}
+
+/* CONTENT */
+.content{max-width:1000px;margin:2rem auto 4rem;padding:0 1.5rem}
+.tab-panel{display:none}.tab-panel.on{display:block}
+
+/* LEADERBOARD TABLE */
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table th{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:#888;text-align:left;padding:0.5rem 0.8rem;border-bottom:1px solid var(--rule);font-weight:400;white-space:nowrap}
+.lb-table td{padding:0.6rem 0.8rem;border-bottom:1px solid rgba(212,207,196,0.5);vertical-align:middle;font-size:0.82rem}
+.lb-table tr{cursor:pointer;transition:background 0.1s}
+.lb-table tr:hover td{background:var(--warm)}
+.lb-table tr:last-child td{border-bottom:none}
+.rank-num{font-family:'DM Mono',monospace;font-size:0.7rem;color:#aaa;min-width:24px}
+.en{font-weight:500;margin-bottom:0.1rem}
+.em{font-family:'DM Mono',monospace;font-size:0.6rem;color:#888}
+.big-num{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--navy)}
+.flag-chip{display:inline-block;font-family:'DM Mono',monospace;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.15rem 0.4rem;border:1px solid currentColor;margin-right:0.25rem;vertical-align:middle}
+.fc-high{color:var(--red)}.fc-med{color:var(--amber)}.fc-info{color:var(--navy)}
+
+/* SECTION INTRO */
+.sec-intro{background:var(--warm);border:1px solid var(--rule);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.82rem;color:#555;line-height:1.6;border-left:3px solid var(--navy)}
+.sec-intro strong{color:var(--ink);font-weight:500}
+
+/* LOADING */
+.loading{padding:3rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:#888}
+.loading::after{content:'…';animation:d 1.2s infinite}
+@keyframes d{0%{content:'…'}33%{content:'.'}66%{content:'..'}100%{content:'…'}}
+
+@media(max-width:600px){.tnav{display:none}.tab{padding:0.6rem 0.8rem;font-size:0.58rem}}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+ <a class="logo" href="/search">ten<em>ure</em></a>
+ <nav class="tnav">
+ <a href="/search">Search</a>
+ <a href="/map?area=SW1X">Map</a>
+ <a href="/foreign-ownership">Foreign ownership</a>
+ </nav>
+ <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#888">Intelligence · Live</span>
+</div>
+
+<div class="bc">
+ <a href="/search">Search</a><span class="bc-sep">›</span><span>Risk Intelligence</span>
+</div>
+
+<div class="hero">
+ <p class="hero-kicker">Structural risk · Automated detection</p>
+ <h1 class="hero-hed">Shell companies, nominee addresses,<br>and dormant holders.</h1>
+ <p class="hero-sub">Automated pattern detection across 5.7M companies. Nominee address factories, overseas entities with no beneficial owner, dissolved companies still holding live titles.</p>
+</div>
+
+<div class="tab-nav">
+ <button class="tab on" onclick="showTab('nominee',this)">Nominee addresses</button>
+ <button class="tab" onclick="showTab('dormant',this)">Dormant holders</button>
+ <button class="tab" onclick="showTab('no-ubo',this)">Overseas / no UBO</button>
+ <button class="tab" onclick="showTab('hubs',this)">Concentration hubs</button>
+ <button class="tab" onclick="showTab('network',this)">High-frequency persons</button>
+</div>
+
+<div class="content">
+
+ <!-- NOMINEE ADDRESSES -->
+
+ <div class="tab-panel on" id="tab-nominee">
+ <div class="sec-intro"><strong>Nominee address detection.</strong> Registered addresses shared by 50 or more companies are a common signal for professional nominee director services and shelf company factories. The addresses below are ranked by company count. High numbers (200+) strongly suggest a registered agent service rather than genuine operations.</div>
+ <div id="nominee-content"><div class="loading">Loading nominee data</div></div>
+ </div>
+
+ <!-- DORMANT HOLDERS -->
+
+ <div class="tab-panel" id="tab-dormant">
+ <div class="sec-intro"><strong>Dormant companies holding live titles.</strong> Companies in Dissolved, Liquidation, or Administration status that still appear as registered proprietors on HMLR title records. HMLR does not automatically update proprietor records on dissolution — these may represent unclaimed assets, failed transfers, or data integrity gaps.</div>
+ <div id="dormant-content"><div class="loading">Loading dormant data</div></div>
+ </div>
+
+ <!-- NO UBO -->
+
+ <div class="tab-panel" id="tab-no-ubo">
+ <div class="sec-intro"><strong>Overseas entities without disclosed beneficial owner.</strong> OCOD-registered titles where no PSC person can be traced in the Companies House register. Many pre-date the August 2022 Register of Overseas Entities requirement. Entities incorporated in secrecy jurisdictions with no UBO represent the highest-opacity holdings in the dataset.</div>
+ <div id="no-ubo-content"><div class="loading">Loading UBO data</div></div>
+ </div>
+
+ <!-- CONCENTRATION HUBS -->
+
+ <div class="tab-panel" id="tab-hubs">
+ <div class="sec-intro"><strong>Geographic concentration hubs.</strong> Companies holding titles across 5 or more distinct districts. May indicate large institutional investors, diversified property funds, or complex structures designed to obscure the geographic reach of a single beneficial owner.</div>
+ <div id="hubs-content"><div class="loading">Loading hub data</div></div>
+ </div>
+
+ <!-- HIGH FREQUENCY PERSONS -->
+
+ <div class="tab-panel" id="tab-network">
+ <div class="sec-intro"><strong>High-frequency PSC persons.</strong> Individuals appearing as Person of Significant Control across many companies. Those with 100+ companies are almost certainly professional nominee directors or trust administrators. Those with 10-50 companies may be genuine family office controllers or corporate secretarial nominees.</div>
+ <div id="network-content"><div class="loading">Loading person network data</div></div>
+ </div>
+
+</div>
+
+<script>
+let loaded = {};
+
+function showTab(id, btn) {
+ document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+ document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+ document.getElementById('tab-'+id).classList.add('on');
+ btn.classList.add('on');
+ if (!loaded[id]) { loadTab(id); loaded[id] = true; }
+}
+
+async function loadTab(id) {
+ try {
+ const r = await fetch(`/api/risk-flags/${id}`);
+ const d = await r.json();
+ renderTab(id, d);
+ } catch(e) {
+ document.getElementById(id+'-content').innerHTML =
+ `<div style="padding:2rem;color:#888;font-size:0.85rem">Error: ${e.message}</div>`;
+ }
+}
+
+function renderTab(id, d) {
+ const rows = d.results || [];
+ if (!rows.length) {
+ document.getElementById(id+'-content').innerHTML =
+ '<div style="padding:2rem;color:#888;font-size:0.85rem">No results found.</div>';
+ return;
+ }
+
+ let html = '';
+
+ if (id === 'nominee') {
+ html = `<table class="lb-table"><thead><tr>
+ <th>#</th><th>Address</th><th>Postcode</th><th>Companies</th><th>Risk level</th>
+ </tr></thead><tbody>` +
+ rows.map((r,i) => {
+ const level = r.company_count >= 500 ? 'CRITICAL' : r.company_count >= 200 ? 'HIGH' : 'MEDIUM';
+ const col = level==='CRITICAL'?'var(--red)':level==='HIGH'?'var(--red)':'var(--amber)';
+ return `<tr>
+ <td class="rank-num">${i+1}</td>
+ <td><div class="en">${r.address||'—'}</div><div class="em">${(r.sample||[]).slice(0,2).join(' · ')}</div></td>
+ <td style="font-family:'DM Mono',monospace;font-size:0.7rem">${r.postcode||'—'}</td>
+ <td><span class="big-num">${r.company_count}</span></td>
+ <td><span class="flag-chip fc-high" style="border-color:${col};color:${col}">${level}</span></td>
+ </tr>`;
+ }).join('') + '</tbody></table>';
+ }
+
+ else if (id === 'dormant') {
+ html = `<table class="lb-table"><thead><tr>
+ <th>#</th><th>Company</th><th>Status</th><th>Dissolved</th><th>Titles still held</th>
+ </tr></thead><tbody>` +
+ rows.map((r,i) => `<tr onclick="window.location='/company?crn=${r.crn}'">
+ <td class="rank-num">${i+1}</td>
+ <td><div class="en">${r.name}</div><div class="em">CH ${r.crn}</div></td>
+ <td><span class="flag-chip fc-high">${r.status}</span></td>
+ <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:#888">${r.dissolution_date||'—'}</td>
+ <td><span class="big-num">${r.title_count}</span></td>
+ </tr>`).join('') + '</tbody></table>';
+ }
+
+ else if (id === 'no-ubo') {
+ html = `<table class="lb-table"><thead><tr>
+ <th>#</th><th>Entity</th><th>Jurisdiction</th><th>Titles</th><th>UBO</th>
+ </tr></thead><tbody>` +
+ rows.map((r,i) => `<tr onclick="window.location='/company?crn=${r.crn||''}'">
+ <td class="rank-num">${i+1}</td>
+ <td><div class="en">${r.name}</div><div class="em">${r.crn||'No CRN'}</div></td>
+ <td style="font-family:'DM Mono',monospace;font-size:0.68rem">${r.jurisdiction||'Overseas'}</td>
+ <td><span class="big-num">${r.title_count}</span></td>
+ <td><span class="flag-chip fc-high">Undisclosed</span></td>
+ </tr>`).join('') + '</tbody></table>';
+ }
+
+ else if (id === 'hubs') {
+ html = `<table class="lb-table"><thead><tr>
+ <th>#</th><th>Company</th><th>Districts</th><th>Total titles</th><th>Flags</th>
+ </tr></thead><tbody>` +
+ rows.map((r,i) => `<tr onclick="window.location='/company?crn=${r.crn}'">
+ <td class="rank-num">${i+1}</td>
+ <td><div class="en">${r.name}</div><div class="em">CH ${r.crn}</div></td>
+ <td style="font-family:'DM Mono',monospace;font-size:0.65rem;color:#666">${(r.districts||[]).slice(0,4).join(' · ')}</td>
+ <td><span class="big-num">${r.title_count}</span></td>
+ <td><span class="flag-chip fc-info">${r.district_count} districts</span></td>
+ </tr>`).join('') + '</tbody></table>';
+ }
+
+ else if (id === 'network') {
+ html = `<table class="lb-table"><thead><tr>
+ <th>#</th><th>Person</th><th>Nationality</th><th>Companies controlled</th><th>Signal</th>
+ </tr></thead><tbody>` +
+ rows.map((r,i) => {
+ const signal = r.companies_controlled >= 200 ? 'Likely nominee' : r.companies_controlled >= 50 ? 'High frequency' : 'Notable';
+ const col = r.companies_controlled >= 200 ? 'fc-high' : 'fc-med';
+ return `<tr onclick="window.location='/person?id=${r.person_id}&name=${encodeURIComponent(r.name)}'">
+ <td class="rank-num">${i+1}</td>
+ <td><div class="en">${r.name}</div><div class="em">Born ${r.dob_year||'—'}</div></td>
+ <td style="font-family:'DM Mono',monospace;font-size:0.68rem;color:#888">${r.nationality||'—'}</td>
+ <td><span class="big-num">${r.companies_controlled}</span></td>
+ <td><span class="flag-chip ${col}">${signal}</span></td>
+ </tr>`;
+ }).join('') + '</tbody></table>';
+ }
+
+ document.getElementById(id+'-content').innerHTML = html;
+}
+
+// Load first tab
+loadTab('nominee');
+loaded['nominee'] = true;
+</script>
+
+</body>
+</html>

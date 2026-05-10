@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Foreign Ownership · Tenure by Plottr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0f0f0d;--paper:#f5f2eb;--warm:#ede9df;--rule:#d4cfc4;--navy:#1a2c4a;--gold:#b8972a;--red:#b52d1e;--amber:#c97b12;--green:#2a5c3f}
+body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.topbar{height:46px;border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:var(--paper);position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);text-decoration:none}
+.logo em{font-style:italic;color:var(--navy)}
+.tnav{display:flex;gap:1.5rem;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase}
+.tnav a{color:#888;text-decoration:none}.tnav a:hover{color:var(--ink)}
+.bc{padding:0.6rem 1.5rem;border-bottom:1px solid var(--rule);background:var(--warm);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;color:#888;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap}
+.bc a{color:#888;text-decoration:none}.bc a:hover{color:var(--ink)}.bc-sep{opacity:0.4}
+
+/* HERO */
+.hero{background:var(--ink);color:var(--paper);padding:3rem 1.5rem 2.5rem}
+.hero-inner{max-width:1000px;margin:0 auto}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(245,242,235,0.4);margin-bottom:0.8rem;display:flex;align-items:center;gap:0.8rem}
+.tier-tag{background:rgba(245,242,235,0.1);color:rgba(245,242,235,0.7);padding:0.15rem 0.5rem;font-size:0.55rem;letter-spacing:0.1em;border:1px solid rgba(245,242,235,0.2)}
+.hero-hed{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:400;letter-spacing:-0.025em;line-height:1.1;margin-bottom:0.6rem;color:var(--paper)}
+.hero-hed em{font-style:italic;color:var(--gold)}
+.hero-sub{font-size:0.88rem;color:rgba(245,242,235,0.5);font-weight:300;line-height:1.65;max-width:600px;margin-bottom:1.5rem}
+.hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;color:rgba(245,242,235,0.35)}
+
+/* DISTRICT SELECTOR */
+.district-bar{border-bottom:1px solid var(--rule);padding:0.8rem 1.5rem;background:var(--warm);display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap}
+.district-label{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:#888}
+.district-input{background:white;border:1px solid var(--rule);padding:0.4rem 0.8rem;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink);outline:none;width:200px}
+.district-input:focus{border-color:var(--navy)}
+.district-btn{background:var(--navy);color:white;border:none;padding:0.4rem 1rem;font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer}
+.district-chips{display:flex;gap:0.4rem;flex-wrap:wrap}
+.dc{background:none;border:1px solid var(--rule);color:#888;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;padding:0.25rem 0.6rem;cursor:pointer;transition:all 0.12s}
+.dc:hover{border-color:var(--navy);color:var(--navy)}
+.dc.on{background:var(--navy);color:white;border-color:var(--navy)}
+
+/* KPI STRIP */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);max-width:1000px;margin:2rem auto 0;padding:0 1.5rem}
+.kpi-card{padding:1.5rem;border:1px solid var(--rule);background:white;margin:0.3rem}
+.kpi-n{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#888;margin-bottom:0.6rem}
+.kpi-v{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:400;display:block;line-height:1;margin-bottom:0.3rem}
+.kpi-s{font-size:0.78rem;color:#777;font-weight:300}
+
+/* LAYOUT */
+.layout{max-width:1000px;margin:2rem auto 4rem;padding:0 1.5rem;display:grid;grid-template-columns:1fr 300px;gap:2rem}
+.sec{margin-bottom:2rem}
+.sec-head{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;padding-bottom:0.5rem;border-bottom:1px solid var(--rule);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.sec-n{color:var(--ink);font-size:0.7rem}
+
+/* JURISDICTION CARDS */
+.juris-card{border:1px solid var(--rule);padding:1.2rem 1.4rem;margin-bottom:0.8rem;cursor:default}
+.juris-card.risk-high{border-left:4px solid var(--red)}
+.juris-card.risk-med{border-left:4px solid var(--amber)}
+.juris-card.risk-low{border-left:4px solid var(--green)}
+.juris-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.8rem}
+.juris-name{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:400;letter-spacing:-0.01em}
+.juris-tags{display:flex;gap:0.3rem;flex-wrap:wrap;margin-top:0.3rem}
+.jtag{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.15rem 0.4rem;border:1px solid currentColor}
+.jt-haven{color:var(--red)}.jt-transparent{color:var(--green)}.jt-sovereign{color:var(--navy)}.jt-opaque{color:var(--amber)}
+.juris-count{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--navy);text-align:right;line-height:1}
+.juris-count-lbl{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;color:#888;display:block}
+.juris-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;padding-top:0.8rem;border-top:1px solid var(--rule)}
+.js-item{}
+.js-val{font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--ink);display:block}
+.js-lbl{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;color:#888}
+.juris-narrative{font-size:0.8rem;color:#666;line-height:1.6;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid var(--rule);font-weight:300}
+
+/* ENTITY TABLE */
+.etable{width:100%;border-collapse:collapse}
+.etable th{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:#888;text-align:left;padding:0.4rem 0.6rem;border-bottom:1px solid var(--rule);font-weight:400;white-space:nowrap}
+.etable td{padding:0.55rem 0.6rem;border-bottom:1px solid rgba(212,207,196,0.5);vertical-align:top;font-size:0.8rem}
+.etable tr{cursor:pointer;transition:background 0.1s}
+.etable tr:hover td{background:var(--warm)}
+.etable tr:last-child td{border-bottom:none}
+.en{font-weight:500}.ej{font-family:'DM Mono',monospace;font-size:0.6rem;color:#888}
+.risk-flag{display:inline-block;font-family:'DM Mono',monospace;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.1rem 0.3rem;border:1px solid currentColor}
+.rf-high{color:var(--red)}.rf-med{color:var(--amber)}.rf-ok{color:var(--green)}
+
+/* SIDEBAR */
+.sc{border:1px solid var(--rule);padding:1.2rem;margin-bottom:1rem}
+.sc-head{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#888;margin-bottom:0.8rem}
+.sc-row{display:flex;justify-content:space-between;align-items:baseline;padding:0.35rem 0;border-bottom:1px solid rgba(212,207,196,0.4);font-size:0.78rem}
+.sc-row:last-child{border-bottom:none}
+.sc-k{color:#666}.sc-v{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ink)}
+
+/* BAR CHART */
+.bar-row{display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0;border-bottom:1px solid rgba(212,207,196,0.3)}
+.bar-row:last-child{border-bottom:none}
+.bar-label{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.04em;min-width:90px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:4px;background:var(--rule)}
+.bar-fill{height:100%;background:var(--navy)}
+.bar-fill.haven{background:var(--red)}
+.bar-fill.transparent{background:var(--green)}
+.bar-count{font-family:'DM Mono',monospace;font-size:0.65rem;min-width:30px;text-align:right;color:#555}
+
+.loading{padding:3rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:#888}
+.loading::after{content:'…';animation:d 1.2s infinite}
+@keyframes d{0%{content:'…'}33%{content:'.'}66%{content:'..'}100%{content:'…'}}
+
+@media(max-width:700px){
+.layout{grid-template-columns:1fr}.sidebar{order:-1}
+.kpis{grid-template-columns:1fr}
+.tnav{display:none}
+}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+ <a class="logo" href="/search">ten<em>ure</em></a>
+ <nav class="tnav">
+ <a href="/search">Search</a>
+ <a href="/map?area=SW1X">Map</a>
+ <a href="/concentration?area=SW1X">Concentration</a>
+ </nav>
+ <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#888">Newsroom · Business · Live</span>
+</div>
+
+<div class="bc">
+ <a href="/search">Search</a><span class="bc-sep">›</span>
+ <span>Foreign Ownership</span>
+</div>
+
+<div class="hero">
+ <div class="hero-inner">
+ <div class="hero-kicker"><span class="tier-tag">Newsroom / Business</span> Foreign Ownership Analysis · HMLR OCOD</div>
+ <h1 class="hero-hed">Overseas-incorporated<br><em>property ownership.</em></h1>
+ <p class="hero-sub">UK registered titles held through overseas-incorporated entities. Country breakdown, jurisdiction risk flags, and beneficial ownership where disclosed via the Register of Overseas Entities.</p>
+ <div class="hero-meta" id="hero-meta">Select an area to load data</div>
+ </div>
+</div>
+
+<div class="district-bar">
+ <span class="district-label">Area</span>
+ <input class="district-input" id="district-input" type="text" placeholder="Postcode prefix e.g. SW1X, W1K…" value="SW1X">
+ <button class="district-btn" onclick="loadDistrict()">Analyse →</button>
+ <div class="district-chips">
+ <button class="dc on" onclick="setDistrict('SW1X',this)">SW1X · Belgravia</button>
+ <button class="dc" onclick="setDistrict('W1K',this)">W1K · Mayfair</button>
+ <button class="dc" onclick="setDistrict('E14',this)">E14 · Canary Wharf</button>
+ <button class="dc" onclick="setDistrict('EC2',this)">EC2 · City</button>
+ <button class="dc" onclick="setDistrict('SW7',this)">SW7 · Knightsbridge</button>
+ </div>
+</div>
+
+<div id="main-content"><div class="loading">Loading foreign ownership data</div></div>
+
+<script>
+let currentDistrict = 'SW1X';
+
+function setDistrict(d, btn) {
+ currentDistrict = d;
+ document.getElementById('district-input').value = d;
+ document.querySelectorAll('.dc').forEach(b => b.classList.remove('on'));
+ btn.classList.add('on');
+ loadDistrict(d);
+}
+
+function loadDistrict(d) {
+ d = d || document.getElementById('district-input').value.trim().toUpperCase() || 'SW1X';
+ currentDistrict = d;
+ document.getElementById('main-content').innerHTML = '<div class="loading">Querying ownership graph</div>';
+ fetch(`/api/foreign-ownership/${encodeURIComponent(d)}`)
+ .then(r => r.json())
+ .then(data => render(data, d))
+ .catch(e => {
+ document.getElementById('main-content').innerHTML = `<div style="padding:3rem 1.5rem;text-align:center;color:#888">${e.message}</div>`;
+ });
+}
+
+// Risk level helper
+function jurisdictionRisk(name) {
+ const havens = ['bvi','british virgin','cayman','jersey','guernsey','isle of man','panama','bahamas','bermuda','liechtenstein','luxembourg','malta','cyprus','hong kong','singapore','dubai','uae'];
+ const sovereigns = ['norway','sweden','denmark','netherlands','germany','france','switzerland'];
+ const n = (name||'').toLowerCase();
+ if (sovereigns.some(s => n.includes(s))) return {level:'low', tag:'transparent', label:'Transparent'};
+ if (havens.some(h => n.includes(h))) return {level:'high', tag:'haven', label:'Tax haven'};
+ return {level:'med', tag:'opaque', label:'Partial disclosure'};
+}
+
+function render(d, district) {
+ const stats = d.stats || {};
+ const jurisdictions = d.jurisdictions || [];
+ const entities = d.entities || [];
+
+ document.getElementById('hero-meta').innerHTML = `
+ <span>Area: ${district}</span>
+ <span>${stats.total_titles||0} corporate titles</span>
+ <span>${stats.foreign_titles||0} overseas-incorporated</span>
+ <span>Data as of today · HMLR OCOD</span>`;
+
+ // KPIs
+ const kpiHtml = `
+ <div class="kpis">
+ <div class="kpi-card">
+ <div class="kpi-n">Overseas-incorporated titles</div>
+ <span class="kpi-v" style="color:var(--navy)">${(stats.foreign_titles||0).toLocaleString()}</span>
+ <div class="kpi-s">${stats.foreign_pct||0}% of all corporate-held property in ${district}</div>
+ </div>
+ <div class="kpi-card">
+ <div class="kpi-n">Jurisdictions identified</div>
+ <span class="kpi-v">${jurisdictions.length}</span>
+ <div class="kpi-s">${jurisdictions.filter(j=>jurisdictionRisk(j.jurisdiction).level==='high').length} tax haven jurisdictions</div>
+ </div>
+ <div class="kpi-card">
+ <div class="kpi-n">Entities tracked</div>
+ <span class="kpi-v">${entities.length}</span>
+ <div class="kpi-s">Overseas-incorporated companies with registered titles</div>
+ </div>
+ </div>`;
+
+ // Jurisdiction cards
+ const jurisHtml = jurisdictions.slice(0,6).map(j => {
+ const risk = jurisdictionRisk(j.jurisdiction);
+ const tagHtml = `<span class="jtag jt-${risk.tag}">${risk.label}</span>`;
+ return `
+ <div class="juris-card risk-${risk.level}">
+ <div class="juris-top">
+ <div>
+ <div class="juris-name">${j.jurisdiction || 'Unknown'}</div>
+ <div class="juris-tags">${tagHtml}</div>
+ </div>
+ <div>
+ <div class="juris-count">${j.title_count}</div>
+ <span class="juris-count-lbl">titles</span>
+ </div>
+ </div>
+ <div class="juris-stats">
+ <div class="js-item">
+ <span class="js-val">${j.entity_count||'—'}</span>
+ <span class="js-lbl">Entities</span>
+ </div>
+ <div class="js-item">
+ <span class="js-val">${j.title_count}</span>
+ <span class="js-lbl">Titles held</span>
+ </div>
+ <div class="js-item">
+ <span class="js-val">${stats.foreign_titles ? Math.round(j.title_count/stats.foreign_titles*100)+'%' : '—'}</span>
+ <span class="js-lbl">Of overseas</span>
+ </div>
+ </div>
+ </div>`;
+ }).join('') || '<div style="color:#888;padding:1rem 0;font-size:0.85rem">No overseas titles found in this area.</div>';
+
+ // Bar chart
+ const maxJ = jurisdictions.length ? jurisdictions[0].title_count : 1;
+ const barsHtml = jurisdictions.slice(0,12).map(j => {
+ const risk = jurisdictionRisk(j.jurisdiction);
+ return `<div class="bar-row">
+ <span class="bar-label">${j.jurisdiction||'Unknown'}</span>
+ <div class="bar-track"><div class="bar-fill ${risk.tag}" style="width:${Math.round(j.title_count/maxJ*100)}%"></div></div>
+ <span class="bar-count">${j.title_count}</span>
+ </div>`;
+ }).join('');
+
+ // Entity table
+ const entityHtml = entities.slice(0,20).map(e => {
+ const risk = jurisdictionRisk(e.jurisdiction);
+ return `<tr onclick="window.location='/company?crn=${e.crn||''}'">
+ <td><div class="en">${e.name}</div><div class="ej">${e.crn||'No CRN'}</div></td>
+ <td style="font-family:'DM Mono',monospace;font-size:0.65rem">${e.jurisdiction||'—'}</td>
+ <td style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy)">${e.title_count}</td>
+ <td><span class="risk-flag rf-${risk.level==='high'?'high':risk.level==='low'?'ok':'med'}">${risk.label}</span></td>
+ </tr>`;
+ }).join('');
+
+ document.getElementById('main-content').innerHTML = `
+ ${kpiHtml}
+ <div class="layout">
+ <div>
+ <div class="sec">
+ <div class="sec-head">Country breakdown <span class="sec-n">${jurisdictions.length} jurisdictions</span></div>
+ ${jurisHtml}
+ </div>
+ <div class="sec">
+ <div class="sec-head">Notable overseas owners <span class="sec-n">${entities.length} entities</span></div>
+ ${entities.length ? `
+ <table class="etable"><thead><tr><th>Entity</th><th>Jurisdiction</th><th>Titles</th><th>Risk</th></tr></thead>
+ <tbody>${entityHtml}</tbody>
+ </table>` : '<div style="color:#888;font-size:0.85rem">No overseas entities found.</div>'}
+ </div>
+ <div class="sec">
+ <div class="sec-head">Methodology</div>
+ <p style="font-size:0.8rem;color:#666;line-height:1.65;font-weight:300">
+ A title is classified as overseas-incorporated where its proprietor is registered in HMLR's OCOD register. UK-incorporated subsidiaries of foreign parents are not included here — they appear in the concentration view. Tax haven classification uses the EU non-cooperative jurisdictions list and OECD CRS non-participants. UBO disclosure data from the UK Register of Overseas Entities (mandatory since August 2022). Pre-2022 holdings may lack UBO data.
+ </p>
+ </div>
+ </div>
+ <div class="sidebar">
+ <div class="sc">
+ <div class="sc-head">Jurisdiction rankings</div>
+ ${barsHtml || '<div style="color:#888;font-size:0.78rem">No data</div>'}
+ </div>
+ <div class="sc">
+ <div class="sc-head">Area summary</div>
+ ${[
+ ['Area', district],
+ ['Total corporate titles', (stats.total_titles||0).toLocaleString()],
+ ['Overseas titles', (stats.foreign_titles||0).toLocaleString()],
+ ['Overseas %', (stats.foreign_pct||0)+'%'],
+ ['Jurisdictions', jurisdictions.length],
+ ['Data source', 'HMLR OCOD'],
+ ].map(([k,v])=>`<div class="sc-row"><span class="sc-k">${k}</span><span class="sc-v">${v}</span></div>`).join('')}
+ </div>
+ <div class="sc">
+ <div class="sc-head">Related</div>
+ <div style="display:flex;flex-direction:column;gap:0.5rem;padding-top:0.3rem">
+ <a href="/concentration?area=${district}" style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--navy);letter-spacing:0.06em">All ownership · ${district} →</a>
+ <a href="/map?area=${district}" style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--navy);letter-spacing:0.06em">Treemap view →</a>
+ <a href="/person-network" style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--navy);letter-spacing:0.06em">Person network →</a>
+ </div>
+ </div>
+ </div>
+ </div>`;
+}
+
+document.getElementById('district-input').addEventListener('keydown', e => {
+ if (e.key === 'Enter') loadDistrict();
+});
+
+loadDistrict('SW1X');
+</script>
+
+</body>
+</html>

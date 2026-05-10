@@ -402,6 +402,146 @@ async def estate_page(request: Request, crn: str = ""):
     return HTMLResponse(read_static("estate.html"))
 
 
+
+@app.get("/foreign-ownership",response_class=HTMLResponse)
+async def foreign_ownership_page(request:Request):
+ return HTMLResponse(read_static("foreign-ownership.html"))
+
+@app.get("/api/risk-flags/{category}")
+async def risk_flags_api(category:str):
+ try:
+ with get_driver().session() as s:
+ if category=="nominee":
+ rows=s.run("MATCH (c:Company)-[:REGISTERED_AT]->(a:Address) WHERE a.postcode IS NOT NULL WITH a,count(DISTINCT c) AS cc,collect(DISTINCT c.name)[0..4] AS sample WHERE cc>=50 RETURN a.postcode AS postcode,a.postcode AS address,cc AS company_count,sample ORDER BY cc DESC LIMIT 30").data()
+ elif category=="dormant":
+ rows=s.run("MATCH (t:Title)-[:OWNED_BY]->(c:Company) WHERE c.status IN ['Dissolved','Liquidation','Administration','Receivership','Converted/Closed'] WITH c,count(DISTINCT t) AS tc RETURN c.company_number AS crn,c.name AS name,c.status AS status,c.dissolution_date AS dissolution_date,tc AS title_count ORDER BY tc DESC LIMIT 50").data()
+ elif category=="no-ubo":
+ rows=s.run("MATCH (t:Title {source:'OCOD'})-[r:OWNED_BY]->(c:Company) WHERE NOT EXISTS {MATCH (p:Person)-[:PSC_OF]->(c)} WITH c,count(DISTINCT t) AS tc,coalesce(r.country_incorporated_in,'Overseas') AS jur RETURN c.company_number AS crn,c.name AS name,c.status AS status,jur AS jurisdiction,tc AS title_count ORDER BY tc DESC LIMIT 50").data()
+ elif category=="hubs":
+ rows=s.run("MATCH (t:Title)-[:OWNED_BY]->(c:Company) WITH c,count(DISTINCT t) AS tc,count(DISTINCT t.district) AS dc,collect(DISTINCT t.district)[0..6] AS districts WHERE dc>=5 AND tc>=10 RETURN c.company_number AS crn,c.name AS name,c.status AS status,tc AS title_count,dc AS district_count,districts ORDER BY dc DESC,tc DESC LIMIT 40").data()
+ elif category=="network":
+ rows=s.run("MATCH (p:Person)-[:PSC_OF]->(c:Company) WITH p,count(DISTINCT c) AS cos WHERE cos>=10 RETURN p.person_id AS person_id,p.name AS name,p.dob_year AS dob_year,p.nationality AS nationality,cos AS companies_controlled ORDER BY cos DESC LIMIT 50").data()
+ else:
+ return JSONResponse(content={"error":"unknown"},status_code=400)
+ return JSONResponse(content={"results":rows,"category":category})
+ except Exception as e:
+ return JSONResponse(content={"results":[],"error":str(e)})
+
+@app.get("/risk-intelligence",response_class=HTMLResponse)
+async def risk_intel_page(request:Request):
+ return HTMLResponse(read_static("risk-intelligence.html"))
+
+@app.get("/person-network",response_class=HTMLResponse)
+async def person_network_page(request:Request):
+ return HTMLResponse(read_static("person-network.html"))
+
+
+@app.get("/api/foreign-ownership/{area}")
+async def foreign_ownership_api(area: str):
+    area = area.upper().strip()
+    try:
+        with get_driver().session() as s:
+            # Get basic stats
+            stats_r = s.run("""MATCH (t:Title) WHERE t.postcode STARTS WITH $a 
+                              WITH count(t) AS total 
+                              OPTIONAL MATCH (t2:Title)-[:OWNED_BY]->(c) WHERE t2.postcode STARTS WITH $a 
+                              WITH total,count(DISTINCT t2) AS corp 
+                              OPTIONAL MATCH (t3:Title {source:'OCOD'})-[:OWNED_BY]->(oc) WHERE t3.postcode STARTS WITH $a 
+                              RETURN total,corp,count(DISTINCT t3) AS ft""", a=area).single()
+            
+            total = int(stats_r["total"]) if stats_r and stats_r["total"] else 0
+            corp = int(stats_r["corp"]) if stats_r and stats_r["corp"] else 0
+            foreign = int(stats_r["ft"]) if stats_r and stats_r["ft"] else 0
+            
+            # Get jurisdictions
+            juris = s.run("""MATCH (t:Title {source:'OCOD'})-[r:OWNED_BY]->(c:Company) 
+                            WHERE t.postcode STARTS WITH $a 
+                            WITH coalesce(r.country_incorporated_in,'Overseas') AS jurisdiction,
+                                 count(DISTINCT t) AS title_count,
+                                 count(DISTINCT c) AS entity_count 
+                            RETURN jurisdiction,title_count,entity_count 
+                            ORDER BY title_count DESC LIMIT 20""", a=area).data()
+            
+            # Get entities  
+            entities = s.run("""MATCH (t:Title {source:'OCOD'})-[r:OWNED_BY]->(c:Company) 
+                               WHERE t.postcode STARTS WITH $a 
+                               WITH c,count(DISTINCT t) AS tc,coalesce(r.country_incorporated_in,'Overseas') AS jur 
+                               RETURN c.company_number AS crn,c.name AS name,c.status AS status,tc AS title_count,jur AS jurisdiction 
+                               ORDER BY tc DESC LIMIT 30""", a=area).data()
+            
+            return JSONResponse(content={
+                "area": area,
+                "stats": {
+                    "total_titles": total,
+                    "corporate_titles": corp, 
+                    "foreign_titles": foreign,
+                    "foreign_pct": round(foreign/corp*100,1) if corp else 0
+                },
+                "jurisdictions": juris,
+                "entities": entities
+            })
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/foreign-ownership", response_class=HTMLResponse)
+async def foreign_ownership_page(request: Request):
+    return HTMLResponse(read_static("foreign-ownership.html"))
+
+
+@app.get("/api/risk-flags/{category}")
+async def risk_flags_api(category: str):
+    try:
+        with get_driver().session() as s:
+            if category == "nominee":
+                rows = s.run("""MATCH (c:Company)-[:REGISTERED_AT]->(a:Address) 
+                               WHERE a.postcode IS NOT NULL 
+                               WITH a,count(DISTINCT c) AS cc,collect(DISTINCT c.name)[0..4] AS sample 
+                               WHERE cc>=50 
+                               RETURN a.postcode AS postcode,a.postcode AS address,cc AS company_count,sample 
+                               ORDER BY cc DESC LIMIT 30""").data()
+            elif category == "dormant":
+                rows = s.run("""MATCH (t:Title)-[:OWNED_BY]->(c:Company) 
+                               WHERE c.status IN ['Dissolved','Liquidation','Administration','Receivership','Converted/Closed'] 
+                               WITH c,count(DISTINCT t) AS tc 
+                               RETURN c.company_number AS crn,c.name AS name,c.status AS status,c.dissolution_date AS dissolution_date,tc AS title_count 
+                               ORDER BY tc DESC LIMIT 50""").data()
+            elif category == "no-ubo":
+                rows = s.run("""MATCH (t:Title {source:'OCOD'})-[r:OWNED_BY]->(c:Company) 
+                               WHERE NOT EXISTS {MATCH (p:Person)-[:PSC_OF]->(c)} 
+                               WITH c,count(DISTINCT t) AS tc,coalesce(r.country_incorporated_in,'Overseas') AS jur 
+                               RETURN c.company_number AS crn,c.name AS name,c.status AS status,jur AS jurisdiction,tc AS title_count 
+                               ORDER BY tc DESC LIMIT 50""").data()
+            elif category == "hubs":
+                rows = s.run("""MATCH (t:Title)-[:OWNED_BY]->(c:Company) 
+                               WITH c,count(DISTINCT t) AS tc,count(DISTINCT t.district) AS dc,collect(DISTINCT t.district)[0..6] AS districts 
+                               WHERE dc>=5 AND tc>=10 
+                               RETURN c.company_number AS crn,c.name AS name,c.status AS status,tc AS title_count,dc AS district_count,districts 
+                               ORDER BY dc DESC,tc DESC LIMIT 40""").data()
+            elif category == "network":
+                rows = s.run("""MATCH (p:Person)-[:PSC_OF]->(c:Company) 
+                               WITH p,count(DISTINCT c) AS cos 
+                               WHERE cos>=10 
+                               RETURN p.person_id AS person_id,p.name AS name,p.dob_year AS dob_year,p.nationality AS nationality,cos AS companies_controlled 
+                               ORDER BY cos DESC LIMIT 50""").data()
+            else:
+                return JSONResponse(content={"error": "unknown"}, status_code=400)
+            
+            return JSONResponse(content={"results": rows, "category": category})
+    except Exception as e:
+        return JSONResponse(content={"results": [], "error": str(e)})
+
+
+@app.get("/risk-intelligence", response_class=HTMLResponse)
+async def risk_intel_page(request: Request):
+    return HTMLResponse(read_static("risk-intelligence.html"))
+
+
+@app.get("/person-network", response_class=HTMLResponse)  
+async def person_network_page(request: Request):
+    return HTMLResponse(read_static("person-network.html"))
+
+
 @app.get("/health")
 async def health():
     try:
